@@ -15,7 +15,7 @@ const Help = () => {
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
       <nav className="bg-white shadow-md">
-        <div className="container mx-auto px-[60px] py-4 flex justify-between items-center">
+        <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-blue-600">孤独症支持平台</h1>
           <div className="flex items-center space-x-4">
             <span className="text-xl text-gray-700">欢迎, {user.email}</span>
@@ -23,7 +23,7 @@ const Help = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-[60px] py-[80px]">
+      <div className="max-w-full px-[80px] py-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">帮助中心</h2>

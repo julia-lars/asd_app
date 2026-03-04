@@ -29,15 +29,15 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-200">
-      <div className="flex justify-around items-center h-20">
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-200 z-10">
+      <div className="flex justify-around items-center h-20 w-full px-4 sm:px-6 lg:px-8">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center px-4 ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-500'}`}
+              className={`flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-500'}`}
             >
               <span className="text-2xl mb-1">{item.icon}</span>
               <span className="text-lg">{item.label}</span>

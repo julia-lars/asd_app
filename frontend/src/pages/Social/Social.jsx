@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from 'fi
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
+import ImageCarousel from '../../components/common/ImageCarousel';
 
 const Social = () => {
   const { user } = useAuth();
@@ -76,6 +77,20 @@ const Social = () => {
           </div>
         </div>
       </nav>
+
+      <div className="max-w-full px-[80px] py-4">
+        <div className="w-full h-64 bg-gray-200 border-2 border-blue-500 flex items-center justify-center">
+          <img 
+            src="/bulletin_board_1.jpg" 
+            alt="测试图片" 
+            className="max-w-full max-h-full object-contain"
+            onError={(e) => {
+              console.error('图片加载失败:', e.target.src);
+              e.target.src = 'https://via.placeholder.com/800x300?text=图片加载失败';
+            }}
+          />
+        </div>
+      </div>
 
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-2xl mx-auto">

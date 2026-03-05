@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 const ImageCarousel = () => {
-  // 使用占位图片测试轮播功能
+  // 使用本地图片
   const images = [
-    "https://via.placeholder.com/1200x300?text=测试图片1",
-    "https://via.placeholder.com/1200x300?text=测试图片2",
-    "https://via.placeholder.com/1200x300?text=测试图片3"
+    "/bulletin_board_1.jpg",
+    "/bulletin_board_2.jpg",
+    "/bulletin_board_3.jpg"
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,10 +20,13 @@ const ImageCarousel = () => {
   }, [images.length]);
 
   return (
-    <div className="relative w-full h-48 overflow-hidden bg-gray-200 border border-gray-300">
+    <div className="relative w-full h-64 overflow-hidden bg-gray-200 border-4 border-blue-500 p-4">
       <h3 className="absolute top-2 left-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs">
         轮播组件已加载 - 当前图片: {currentIndex + 1}/{images.length}
       </h3>
+      <div className="absolute top-10 left-2 bg-white bg-opacity-70 px-2 py-1 rounded text-xs">
+        图片路径: {images[currentIndex]}
+      </div>
       {images.map((image, index) => (
         <div
           key={index}
@@ -35,6 +38,8 @@ const ImageCarousel = () => {
             className="w-full h-full object-cover"
             onError={(e) => {
               console.error('Image loading error:', e.target.src);
+              e.target.src = 'https://via.placeholder.com/1200x300?text=图片加载失败';
+              e.target.alt = '图片加载失败';
             }}
           />
         </div>

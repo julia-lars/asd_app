@@ -68,7 +68,7 @@ const Social = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
+    <div className="min-h-screen bg-gray-100 pb-24 relative">
       <nav className="bg-white shadow-md">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-blue-600">孤独症支持平台</h1>
@@ -80,9 +80,9 @@ const Social = () => {
 
       <div className="max-w-full px-[80px] py-4">
         <div className="w-full h-64 bg-gray-200 border-2 border-blue-500 flex items-center justify-center">
-          <img 
-            src="/bulletin_board_1.jpg" 
-            alt="测试图片" 
+          <img
+            src="/bulletin_board_1.jpg"
+            alt="公告板图片"
             className="max-w-full max-h-full object-contain"
             onError={(e) => {
               console.error('图片加载失败:', e.target.src);
@@ -139,7 +139,7 @@ const Social = () => {
           </div>
         </div>
       </div>
-      
+
       <BottomNav />
     </div>
   );

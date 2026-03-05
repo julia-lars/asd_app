@@ -29,18 +29,46 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md z-10">
-      <div className="flex justify-around items-center h-20 w-full px-[80px]">
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'white',
+      boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+      zIndex: 9999,
+      borderTop: '1px solid #e5e7eb',
+      height: '5rem'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        height: '100%',
+        width: '100%'
+      }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-500'}`}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                padding: '0.5rem',
+                color: isActive ? '#2563eb' : '#6b7280',
+                fontWeight: isActive ? '600' : '400',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
-              <span className="text-2xl mb-1">{item.icon}</span>
-              <span className="text-lg">{item.label}</span>
+              <span style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{item.icon}</span>
+              <span style={{ fontSize: '1rem' }}>{item.label}</span>
             </button>
           );
         })}

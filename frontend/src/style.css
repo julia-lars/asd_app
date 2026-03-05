@@ -1,29 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --spa-bg: #e7e2d7;
+  --spa-bg-soft: #f3f0e8;
+  --spa-surface: rgba(252, 250, 245, 0.78);
+  --spa-surface-strong: rgba(255, 255, 255, 0.9);
+  --spa-text: #20302a;
+  --spa-muted: #5d6a64;
+  --spa-line: rgba(37, 53, 47, 0.14);
+  --spa-accent: #7a8f85;
+  --spa-accent-strong: #5f766b;
+  --spa-danger: #9f5f5f;
+  font-family: "Manrope", "Noto Sans SC", sans-serif;
   line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  font-weight: 500;
+  color-scheme: light;
+  color: var(--spa-text);
+  background-color: var(--spa-bg-soft);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 a {
-  font-weight: 500;
-  color: #646cff;
+  font-weight: 600;
+  color: var(--spa-accent-strong);
   text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
+  color: var(--spa-accent);
 }
 
 body {
@@ -31,25 +48,252 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  box-sizing: border-box;
+  color: var(--spa-text);
+  background:
+    radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.5), transparent 38%),
+    radial-gradient(circle at 90% 5%, rgba(190, 206, 197, 0.32), transparent 40%),
+    linear-gradient(140deg, var(--spa-bg-soft) 0%, var(--spa-bg) 48%, #dfdbd0 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 120px 120px;
+  opacity: 0.2;
+  z-index: -1;
+}
+
+#root {
+  min-height: 100vh;
+  animation: page-fade 500ms ease-out;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-family: "Cormorant Garamond", "Noto Serif SC", serif;
+  letter-spacing: 0.02em;
+  font-size: clamp(1.8rem, 2.4vw, 2.2rem);
   line-height: 1.1;
+  margin: 0;
 }
 
-/* 全局按钮样式已移除以避免影响底部导航栏 */
+.bg-gray-100 {
+  background-color: transparent !important;
+}
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.bg-white {
+  background-color: var(--spa-surface) !important;
+  border: 1px solid var(--spa-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.bg-white.bg-opacity-90 {
+  background-color: var(--spa-surface-strong) !important;
+}
+
+.shadow-md {
+  box-shadow: 0 20px 45px -30px rgba(20, 29, 25, 0.5) !important;
+}
+
+.rounded-lg,
+.rounded-md {
+  border-radius: 1rem !important;
+}
+
+.border,
+.border-b,
+.border-2 {
+  border-color: var(--spa-line) !important;
+}
+
+.text-blue-600,
+.text-blue-500 {
+  color: var(--spa-accent-strong) !important;
+}
+
+.text-gray-800 {
+  color: var(--spa-text) !important;
+}
+
+.text-gray-700,
+.text-gray-600,
+.text-gray-500 {
+  color: var(--spa-muted) !important;
+}
+
+.text-gray-400 {
+  color: rgba(93, 106, 100, 0.72) !important;
+}
+
+.bg-blue-500 {
+  background-color: var(--spa-accent) !important;
+  border: 1px solid rgba(89, 110, 100, 0.32);
+  color: #f8f6f0 !important;
+}
+
+.hover\:bg-blue-600:hover {
+  background-color: var(--spa-accent-strong) !important;
+}
+
+.bg-blue-100 {
+  background-color: rgba(182, 198, 189, 0.34) !important;
+}
+
+.bg-red-500 {
+  background-color: var(--spa-danger) !important;
+}
+
+.hover\:bg-red-600:hover {
+  background-color: #8c5151 !important;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  transition: transform 180ms ease, filter 180ms ease, background-color 180ms ease;
+}
+
+button:hover {
+  filter: saturate(0.95);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+input,
+textarea {
+  background-color: rgba(255, 255, 255, 0.64);
+  border-color: var(--spa-line) !important;
+  color: var(--spa-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(93, 106, 100, 0.78);
+}
+
+.focus\:ring-blue-500:focus,
+.focus\:ring-blue-500:focus-visible {
+  --tw-ring-color: rgba(122, 143, 133, 0.3) !important;
+}
+
+nav.bg-white.shadow-md {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background-color: rgba(250, 248, 242, 0.72) !important;
+}
+
+.max-w-full.px-\[80px\] {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: clamp(1rem, 4vw, 4.5rem) !important;
+  padding-right: clamp(1rem, 4vw, 4.5rem) !important;
+}
+
+.w-96 {
+  width: min(24rem, calc(100vw - 2rem)) !important;
+}
+
+.h-96 {
+  height: min(24rem, 58vh) !important;
+}
+
+.h-64 {
+  height: clamp(12rem, 38vw, 16rem) !important;
+}
+
+.pb-24 {
+  padding-bottom: 6.5rem !important;
+}
+
+.text-xl {
+  font-size: clamp(1rem, 0.45vw + 0.9rem, 1.12rem) !important;
+}
+
+.text-2xl {
+  font-size: clamp(1.3rem, 1.15vw + 1rem, 1.75rem) !important;
+}
+
+.text-3xl {
+  font-size: clamp(1.55rem, 1.8vw + 1.1rem, 2.2rem) !important;
+}
+
+@media (max-width: 640px) {
+  .py-8 {
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
   }
-  a:hover {
-    color: #747bff;
+
+  .p-8 {
+    padding: 1.25rem !important;
   }
-  button {
-    background-color: #f9f9f9;
+
+  .p-6 {
+    padding: 1rem !important;
   }
 }
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.min-h-screen.flex.items-center.justify-center.bg-cover.bg-center {
+  position: relative;
+  padding: 1rem;
+  isolation: isolate;
+}
+
+.min-h-screen.flex.items-center.justify-center.bg-cover.bg-center::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(160deg, rgba(241, 238, 231, 0.72), rgba(109, 128, 118, 0.22));
+}
+
+.min-h-screen.flex.items-center.justify-center.bg-cover.bg-center > .bg-white {
+  position: relative;
+  z-index: 1;
+}
+
+nav .flex.justify-between.items-center {
+  gap: 0.75rem;
+}
+
+nav .items-center.space-x-4 {
+  min-width: 0;
+}
+
+nav .items-center.space-x-4 .text-xl {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  nav .flex.justify-between.items-center {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  nav .items-center.space-x-4 .text-xl {
+    white-space: normal;
+    overflow: visible;
+  }
+}
+

@@ -28,38 +28,46 @@ const BottomNav = () => {
     }
   ];
 
+  const shellStyle = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2147483647,
+    padding: '0.65rem 0.85rem calc(0.9rem + env(safe-area-inset-bottom))',
+    pointerEvents: 'none'
+  };
+
+  const panelStyle = {
+    maxWidth: '900px',
+    margin: '0 auto',
+    borderRadius: '18px',
+    border: '1px solid rgba(66, 92, 123, 0.22)',
+    background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(238, 246, 255, 0.9) 55%, rgba(224, 236, 250, 0.92))',
+    boxShadow: '0 24px 46px rgba(28, 44, 62, 0.22), 0 2px 8px rgba(255, 255, 255, 0.55) inset',
+    backdropFilter: 'blur(18px) saturate(110%)',
+    WebkitBackdropFilter: 'blur(18px) saturate(110%)',
+    overflow: 'hidden',
+    pointerEvents: 'auto'
+  };
+
+  const rowStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    gap: '0.32rem',
+    padding: '0.38rem'
+  };
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 2147483647,
-        padding: '0.5rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom))',
-        pointerEvents: 'none'
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '860px',
-          margin: '0 auto',
-          background: 'rgba(255, 255, 255, 0.96)',
-          border: '1px solid rgba(37, 53, 47, 0.2)',
-          boxShadow: '0 14px 30px rgba(20, 29, 25, 0.22)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          pointerEvents: 'auto'
-        }}
-      >
+    <div style={shellStyle}>
+      <div style={panelStyle}>
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: '0.25rem',
-            padding: '0.3rem'
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent)'
           }}
-        >
+        />
+        <div style={rowStyle}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -68,21 +76,28 @@ const BottomNav = () => {
                 onClick={() => navigate(item.path)}
                 style={{
                   display: 'flex',
-                  minHeight: '58px',
+                  minHeight: '60px',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: isActive ? 'rgba(182, 198, 189, 0.45)' : 'transparent',
-                  color: isActive ? '#3c544b' : '#5d6a64',
+                  border: '1px solid transparent',
+                  borderRadius: '13px',
+                  background: isActive
+                    ? 'linear-gradient(165deg, rgba(186, 209, 233, 0.72), rgba(156, 186, 217, 0.56))'
+                    : 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.15))',
+                  boxShadow: isActive
+                    ? '0 10px 16px rgba(55, 84, 116, 0.24), 0 1px 0 rgba(255, 255, 255, 0.72) inset'
+                    : '0 1px 0 rgba(255, 255, 255, 0.42) inset',
+                  color: isActive ? '#2f4f70' : '#5f7490',
                   cursor: 'pointer',
-                  fontWeight: 600,
-                  lineHeight: 1.1
+                  fontWeight: isActive ? 700 : 600,
+                  letterSpacing: '0.01em',
+                  lineHeight: 1.1,
+                  transition: 'all 180ms ease'
                 }}
               >
-                <span style={{ marginBottom: '0.2rem', fontSize: '1.05rem' }}>{item.icon}</span>
-                <span style={{ fontSize: '0.8rem' }}>{item.label}</span>
+                <span style={{ marginBottom: '0.24rem', fontSize: '1.08rem' }}>{item.icon}</span>
+                <span style={{ fontSize: '0.81rem' }}>{item.label}</span>
               </button>
             );
           })}

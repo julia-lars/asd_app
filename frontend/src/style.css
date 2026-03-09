@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 :root {
-  --spa-bg: #dde7f3;
-  --spa-bg-soft: #eef4fb;
+  --spa-bg: #fff5e8;
+  --spa-bg-soft: #fffaf3;
   --spa-surface: rgba(246, 250, 255, 0.8);
   --spa-surface-strong: rgba(255, 255, 255, 0.9);
   --spa-text: #213549;
@@ -50,9 +50,19 @@ body {
   overflow-x: hidden;
   color: var(--spa-text);
   background:
-    radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.5), transparent 38%),
-    radial-gradient(circle at 90% 5%, rgba(163, 189, 220, 0.28), transparent 42%),
-    linear-gradient(140deg, var(--spa-bg-soft) 0%, var(--spa-bg) 48%, #d5e0ee 100%);
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.7), transparent 36%),
+    radial-gradient(circle at 90% 6%, rgba(255, 221, 195, 0.24), transparent 40%),
+    radial-gradient(circle at 22% 78%, rgba(255, 196, 210, 0.22), transparent 42%),
+    linear-gradient(
+      135deg,
+      #fff5ef 0%,
+      #fff8d9 16%,
+      #f4f8d7 33%,
+      #dbf7ea 50%,
+      #deefff 66%,
+      #eee5ff 82%,
+      #ffe8f4 100%
+    );
 }
 
 body::before {
@@ -263,7 +273,7 @@ nav.bg-white.shadow-md {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(160deg, rgba(238, 245, 255, 0.72), rgba(122, 150, 181, 0.24));
+  background: linear-gradient(160deg, rgba(255, 247, 233, 0.76), rgba(255, 225, 237, 0.28));
 }
 
 .min-h-screen.flex.items-center.justify-center.bg-cover.bg-center > .bg-white {
@@ -344,3 +354,4 @@ nav h1.text-3xl {
     padding: 0.2rem 0.25rem 0.25rem 0;
   }
 }
+

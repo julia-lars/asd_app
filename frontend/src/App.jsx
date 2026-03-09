@@ -19,7 +19,7 @@ function App() {
           <Route path="/ai-chat" element={<AiChat />} />
           <Route path="/help" element={<Help />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/" element={<Navigate to="/social" replace />} />
+          <Route path="/" element={<Navigate to="/ai-chat" replace />} />
         </Routes>
       </AuthProvider>
     </Router>
@@ -27,3 +27,4 @@ function App() {
 }
 
 export default App;
+

@@ -15,7 +15,7 @@ const Login = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/social');
+      navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
     }
@@ -63,3 +63,4 @@ const Login = () => {
 };
 
 export default Login;
+

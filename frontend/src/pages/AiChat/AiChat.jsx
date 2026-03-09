@@ -1,54 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import BottomNav from '../../components/common/BottomNav';
 
 const AiChat = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (loading) return;
     if (!user) {
       navigate('/login');
       return;
     }
-    // 初始化欢迎消息
+
     setMessages([
       {
         role: 'assistant',
-        content: '你好！我是你的孤独症支持助手。有什么我可以帮助你的吗？'
+        content: '你好，我是你的 AI 助手。有什么我可以帮助你的吗？'
       }
     ]);
-  }, [user, navigate]);
+  }, [loading, user, navigate]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    // 添加用户消息
-    const newMessages = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
-    setInput('');
-
-    // 模拟AI回复（实际项目中这里会调用AI API）
-    setTimeout(() => {
-      const aiResponse = getAIResponse(input);
-      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-    }, 1000);
-  };
-
-  // 模拟AI回复函数
-  const getAIResponse = (userInput) => {
+  const getAIResponse = () => {
     const responses = [
-      "我理解你的感受，孤独症患者及其家属确实面临很多挑战。你最近有什么具体的问题或困扰吗？",
-      "谢谢你的分享。每个孤独症患者都是独特的，他们的需求和表现也各不相同。你可以告诉我更多关于你遇到的情况吗？",
-      "我能感受到你的担忧。记住，你不是一个人在面对这些困难。有很多资源和支持可以帮助你。",
-      "你的观察很重要。孤独症患者的行为往往有其背后的原因，理解这些原因可以帮助我们更好地支持他们。",
-      "我很欣赏你对家人的关心和付出。照顾孤独症患者确实需要很大的耐心和爱心。"
+      '我理解你的感受。可以先告诉我你现在最困扰的具体问题吗？',
+      '谢谢你的分享。每位用户的情况都不同，我们可以一步一步来。',
+      '你并不孤单。我们可以先从一个小目标开始。',
+      '你的观察很重要，这有助于我们找到更合适的支持方式。',
+      '你已经做得很好了，我们继续一起整理下一步。'
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    const text = input;
+    const newMessages = [...messages, { role: 'user', content: text }];
+    setMessages(newMessages);
+    setInput('');
+
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { role: 'assistant', content: getAIResponse() }]);
+    }, 600);
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen text-2xl">加载中...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
@@ -65,25 +71,27 @@ const AiChat = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">AI 助手</h2>
-            
-            {/* 对话历史 */}
+
             <div className="border rounded-lg p-4 mb-6 h-96 overflow-y-auto">
               {messages.map((message, index) => (
                 <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                  <div className={`inline-block max-w-[80%] p-3 rounded-lg ${message.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                  <div
+                    className={`inline-block max-w-[80%] p-3 rounded-lg ${
+                      message.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'
+                    }`}
+                  >
                     <p className="text-xl">{message.content}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 输入区域 */}
             <div className="flex">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="输入你的问题..."
                 className="flex-1 border rounded-l-md p-4 text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -97,7 +105,7 @@ const AiChat = () => {
           </div>
         </div>
       </div>
-      
+
       <BottomNav />
     </div>
   );

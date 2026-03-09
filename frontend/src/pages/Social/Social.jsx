@@ -1,19 +1,32 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { db } from '../../services/firebase';
-import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
-import ImageCarousel from '../../components/common/ImageCarousel';
+
+const TEXT = {
+  loading: '\u52a0\u8f7d\u4e2d...',
+  appTitle: '\u5b64\u72ec\u75c7\u652f\u6301\u5e73\u53f0',
+  welcome: '\u6b22\u8fce',
+  defaultUser: '\u7528\u6237',
+  boardAlt: '\u516c\u544a\u680f\u56fe\u7247',
+  postTitle: '\u53d1\u5e03\u65b0\u52a8\u6001',
+  postPlaceholder: '\u5206\u4eab\u4f60\u7684\u7ecf\u9a8c\u548c\u611f\u53d7...',
+  publish: '\u53d1\u5e03',
+  community: '\u793e\u533a\u52a8\u6001',
+  empty: '\u8fd8\u6ca1\u6709\u52a8\u6001\uff0c\u5feb\u6765\u53d1\u5e03\u7b2c\u4e00\u6761\u5427\uff01'
+};
 
 const Social = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate('/login');
       return;
@@ -23,9 +36,9 @@ const Social = () => {
       try {
         const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
-        const postsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
+        const postsData = querySnapshot.docs.map((item) => ({
+          id: item.id,
+          ...item.data()
         }));
         setPosts(postsData);
       } catch (error) {
@@ -36,26 +49,26 @@ const Social = () => {
     };
 
     fetchPosts();
-  }, [user, navigate]);
+  }, [authLoading, user, navigate]);
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() || !user) return;
 
     try {
       await addDoc(collection(db, 'posts'), {
         content,
         userId: user.uid,
-        userName: user.displayName || 'User',
+        userName: user.displayName || TEXT.defaultUser,
         createdAt: serverTimestamp()
       });
       setContent('');
-      // 重新获取帖子列表
+
       const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const postsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
+      const postsData = querySnapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
       }));
       setPosts(postsData);
     } catch (error) {
@@ -63,17 +76,21 @@ const Social = () => {
     }
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen text-2xl">加载中...</div>;
+  if (authLoading || loading) {
+    return <div className="flex items-center justify-center h-screen text-2xl">{TEXT.loading}</div>;
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24 relative">
       <nav className="bg-white shadow-md">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-blue-600">孤独症支持平台</h1>
+          <h1 className="text-3xl font-bold text-blue-600">{TEXT.appTitle}</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-xl text-gray-700">欢迎, {user.email}</span>
+            <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
           </div>
         </div>
       </nav>
@@ -82,11 +99,11 @@ const Social = () => {
         <div className="w-full h-64 bg-gray-200 border-2 border-blue-500 flex items-center justify-center">
           <img
             src="/bulletin_board_1.jpg"
-            alt="公告板图片"
+            alt={TEXT.boardAlt}
             className="max-w-full max-h-full object-contain"
             onError={(e) => {
-              console.error('图片加载失败:', e.target.src);
-              e.target.src = 'https://via.placeholder.com/800x300?text=图片加载失败';
+              console.error('Image load failed:', e.currentTarget.src);
+              e.currentTarget.src = 'https://via.placeholder.com/800x300?text=%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5';
             }}
           />
         </div>
@@ -95,32 +112,30 @@ const Social = () => {
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">发布新动态</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">{TEXT.postTitle}</h2>
             <form onSubmit={handlePostSubmit}>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="分享你的经验和感受..."
+                placeholder={TEXT.postPlaceholder}
                 className="w-full border rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xl"
                 rows={4}
-              ></textarea>
+              />
               <div className="mt-6 flex justify-center">
                 <button
                   type="submit"
                   className="bg-blue-500 text-white py-3 px-8 rounded-md hover:bg-blue-600 transition-colors text-xl"
                 >
-                  发布
+                  {TEXT.publish}
                 </button>
               </div>
             </form>
           </div>
 
           <div className="bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold p-6 border-b text-center">社区动态</h2>
+            <h2 className="text-2xl font-semibold p-6 border-b text-center">{TEXT.community}</h2>
             {posts.length === 0 ? (
-              <div className="p-10 text-center text-gray-500 text-xl">
-                还没有动态，快来发布第一条吧！
-              </div>
+              <div className="p-10 text-center text-gray-500 text-xl">{TEXT.empty}</div>
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="p-6 border-b last:border-0">

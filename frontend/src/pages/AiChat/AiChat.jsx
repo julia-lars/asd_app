@@ -1,11 +1,10 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import BottomNav from '../../components/common/BottomNav';
 
 const TEXT = {
   loading: '\u52a0\u8f7d\u4e2d...',
-  appTitle: '\u5b64\u72ec\u75c7\u652f\u6301\u5e73\u53f0',
   welcome: '\u6b22\u8fce',
   chatTitle: 'AI \u52a9\u624b',
   placeholder: '\u8f93\u5165\u4f60\u7684\u95ee\u9898...',
@@ -22,6 +21,15 @@ const AiChat = () => {
   const navigate = useNavigate();
   const listRef = useRef(null);
 
+  const formatTime = (date) => {
+    if (!date) return '';
+    try {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) {
@@ -29,10 +37,12 @@ const AiChat = () => {
       return;
     }
 
+    const now = new Date();
     setMessages([
       {
         role: 'assistant',
-        content: TEXT.hello
+        content: TEXT.hello,
+        createdAt: now
       }
     ]);
   }, [loading, user, navigate]);
@@ -55,14 +65,40 @@ const AiChat = () => {
   };
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    const text = input.trim();
+    if (!text) return;
 
-    const text = input;
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    const now = new Date();
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'user',
+        content: text,
+        createdAt: now,
+        status: 'sent'
+      }
+    ]);
     setInput('');
 
     setTimeout(() => {
-      setMessages((prev) => [...prev, { role: 'assistant', content: getAIResponse() }]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        for (let i = updated.length - 1; i >= 0; i -= 1) {
+          if (updated[i].role === 'user') {
+            updated[i] = { ...updated[i], status: 'read' };
+            break;
+          }
+        }
+
+        return [
+          ...updated,
+          {
+            role: 'assistant',
+            content: getAIResponse(),
+            createdAt: new Date()
+          }
+        ];
+      });
     }, 600);
   };
 
@@ -76,9 +112,15 @@ const AiChat = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
-      <nav className="bg-white shadow-md">
+      <nav className="app-top-nav bg-white shadow-md">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-blue-600">{TEXT.appTitle}</h1>
+          <div className="flex items-center shrink-0 min-w-0">
+            <img
+              src="/logo.jpg"
+              alt="logo"
+              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left"
+            />
+          </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
           </div>
@@ -94,53 +136,83 @@ const AiChat = () => {
 
             <div
               ref={listRef}
-              className="h-[58vh] min-h-[420px] overflow-y-auto px-8 py-8 space-y-6"
+              className="h-[58vh] min-h-[420px] overflow-y-auto px-12 py-10 space-y-3 bg-[#fafbfc]"
             >
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
+                const timeLabel = formatTime(message.createdAt);
                 return (
-                  <div key={index} className={`flex items-start gap-4 px-[10px] ${isUser ? 'justify-end' : 'justify-start'}`}>
-                    {!isUser && (
-                      <div className="h-20 w-20 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0">
-                        {TEXT.assistant}
-                      </div>
-                    )}
-
+                  <div
+                    key={index}
+                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-1`}
+                  >
                     <div
-                      className={`max-w-[78%] rounded-full px-6 py-5 shadow-sm border ${
-                        isUser
-                          ? 'bg-blue-100 border-blue-100/70 text-gray-800'
-                          : 'bg-gray-50 border-gray-100 text-gray-800'
+                      className={`flex items-end gap-5 w-full ${
+                        isUser ? 'justify-end' : 'justify-start'
                       }`}
                     >
-                      <p className="text-lg leading-8">{message.content}</p>
+                      {!isUser && (
+                        <div className="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-base font-bold shrink-0">
+                          🤖
+                        </div>
+                      )}
+
+                      <div
+                        className={`max-w-[68%] px-7 py-4 rounded-3xl shadow-sm ${
+                          isUser
+                            ? 'bg-[#4285f4] text-white text-left'
+                            : 'bg-[#f0f2f5] text-gray-800 text-left'
+                        }`}
+                      >
+                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                      </div>
+
+                      {isUser && (
+                        <div className="h-16 w-16 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-base font-bold shrink-0">
+                          😊
+                        </div>
+                      )}
                     </div>
 
-                    {isUser && (
-                      <div className="h-20 w-20 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-bold shrink-0">
-                        {TEXT.user}
-                      </div>
-                    )}
+                    <div
+                      className={`flex items-center gap-2 text-[12px] text-gray-400 px-[54px] ${
+                        isUser ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {timeLabel && <span>{timeLabel}</span>}
+                      {isUser && (
+                        <span>
+                          {message.status === 'read'
+                            ? '已读'
+                            : message.status === 'sent'
+                              ? '已发送'
+                              : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             <div className="border-t border-white/70 px-[10px] py-6 bg-white/90">
-              <div className="flex items-center gap-3 rounded-full border border-slate-200/65 bg-white px-3 py-3 shadow-sm">
+              <div className="flex items-center gap-3 rounded-full border border-[#e0e0e0] bg-white px-4 h-12 shadow-sm focus-within:border-[#4285f4] focus-within:shadow-[0_0_0_1px_rgba(66,133,244,0.12)]">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={TEXT.placeholder}
-                  className="flex-1 border-0 bg-transparent px-3 py-3 text-lg focus:outline-none focus:ring-0"
+                  className="flex-1 border-0 bg-transparent px-1 text-[15px] focus:outline-none focus:ring-0 placeholder-[#9e9e9e]"
                 />
                 <button
                   onClick={handleSend}
-                  className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-colors text-base font-semibold"
+                  disabled={!input.trim()}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-[#4285f4] text-white hover:scale-105 disabled:bg-gray-300 disabled:opacity-70 disabled:cursor-not-allowed transition-transform"
                 >
-                  {TEXT.send}
+                  <span className="text-sm">✈️</span>
                 </button>
               </div>
             </div>

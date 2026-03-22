@@ -203,6 +203,13 @@ nav.bg-white.shadow-md {
   background-color: rgba(244, 249, 255, 0.76) !important;
 }
 
+nav.app-top-nav.bg-white.shadow-md {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+}
+
 .max-w-full.px-\[80px\] {
   max-width: 1200px;
   margin: 0 auto;

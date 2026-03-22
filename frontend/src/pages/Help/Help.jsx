@@ -1,11 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
 
 const TEXT = {
   loading: '\u52a0\u8f7d\u4e2d...',
-  appTitle: '\u5b64\u72ec\u75c7\u652f\u6301\u5e73\u53f0',
   welcome: '\u6b22\u8fce',
   title: '\u5e2e\u52a9\u4e2d\u5fc3',
   faq: '\u5e38\u89c1\u95ee\u9898',
@@ -31,9 +30,15 @@ const Help = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
-      <nav className="bg-white shadow-md">
+      <nav className="app-top-nav bg-white shadow-md">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-blue-600">{TEXT.appTitle}</h1>
+          <div className="flex items-center shrink-0 min-w-0">
+            <img
+              src="/logo.jpg"
+              alt="logo"
+              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left"
+            />
+          </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
           </div>

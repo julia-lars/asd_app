@@ -18,6 +18,7 @@ const AiChat = () => {
   const { user, loading } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const navigate = useNavigate();
   const listRef = useRef(null);
 
@@ -53,20 +54,27 @@ const AiChat = () => {
     }
   }, [messages]);
 
-  const getAIResponse = () => {
-    const responses = [
-      '\u6211\u7406\u89e3\u4f60\u7684\u611f\u53d7\u3002\u53ef\u4ee5\u5148\u544a\u8bc9\u6211\u4f60\u73b0\u5728\u6700\u56f0\u6270\u7684\u5177\u4f53\u95ee\u9898\u5417\uff1f',
-      '\u8c22\u8c22\u4f60\u7684\u5206\u4eab\u3002\u6bcf\u4f4d\u7528\u6237\u7684\u60c5\u51b5\u90fd\u4e0d\u540c\uff0c\u6211\u4eec\u53ef\u4ee5\u4e00\u6b65\u4e00\u6b65\u6765\u3002',
-      '\u4f60\u5e76\u4e0d\u5b64\u5355\u3002\u6211\u4eec\u53ef\u4ee5\u5148\u4ece\u4e00\u4e2a\u5c0f\u76ee\u6807\u5f00\u59cb\u3002',
-      '\u4f60\u7684\u89c2\u5bdf\u5f88\u91cd\u8981\uff0c\u8fd9\u6709\u52a9\u4e8e\u6211\u4eec\u627e\u5230\u66f4\u5408\u9002\u7684\u652f\u6301\u65b9\u5f0f\u3002',
-      '\u4f60\u5df2\u7ecf\u505a\u5f97\u5f88\u597d\u4e86\uff0c\u6211\u4eec\u7ee7\u7eed\u4e00\u8d77\u6574\u7406\u4e0b\u4e00\u6b65\u3002'
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  const fetchAIResponse = async (text) => {
+    const resp = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+
+    if (!resp.ok) {
+      const payload = await resp.json().catch(() => ({}));
+      const msg = payload?.error ? String(payload.error) : `HTTP ${resp.status}`;
+      throw new Error(msg);
+    }
+
+    const data = await resp.json();
+    return typeof data?.text === 'string' ? data.text : '';
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim();
     if (!text) return;
+    if (sending) return;
 
     const now = new Date();
     setMessages((prev) => [
@@ -80,7 +88,10 @@ const AiChat = () => {
     ]);
     setInput('');
 
-    setTimeout(() => {
+    setSending(true);
+
+    try {
+      const replyText = await fetchAIResponse(text);
       setMessages((prev) => {
         const updated = [...prev];
         for (let i = updated.length - 1; i >= 0; i -= 1) {
@@ -94,12 +105,24 @@ const AiChat = () => {
           ...updated,
           {
             role: 'assistant',
-            content: getAIResponse(),
+            content: replyText || '（未返回内容）',
             createdAt: new Date()
           }
         ];
       });
-    }, 600);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `调用 DeepSeek 失败：${msg}`,
+          createdAt: new Date()
+        }
+      ]);
+    } finally {
+      setSending(false);
+    }
   };
 
   if (loading) {
@@ -209,10 +232,10 @@ const AiChat = () => {
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || sending}
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-[#4285f4] text-white hover:scale-105 disabled:bg-gray-300 disabled:opacity-70 disabled:cursor-not-allowed transition-transform"
                 >
-                  <span className="text-sm">✈️</span>
+                  <span className="text-sm">{sending ? '…' : '✈️'}</span>
                 </button>
               </div>
             </div>

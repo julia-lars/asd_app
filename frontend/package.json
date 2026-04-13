@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build:kg": "node scripts/cxToKgGraph.mjs",
+    "build": "npm run build:kg && tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "^10.4.27",
+    "cytoscape": "^3.33.2",
     "firebase": "^12.10.0",
     "postcss": "^8.5.8",
     "react": "^19.2.4",

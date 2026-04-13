@@ -10,9 +10,11 @@
 asd_app/
 ├── server/                      # AI 网关（Express + MCP 子进程调用 DeepSeek）
 │   ├── index.js                 # HTTP 服务：/api/ai/chat 等
-│   ├── fixedSystemPrompt.js     # 固定系统 Prompt（全站统一，见下文）
+│   ├── fixedSystemPrompt.js     # 固定系统 Prompt
+│   ├── longTermMemory.js          # 用户级长期记忆：Firestore 或内存
+│   ├── reflect.js / reflectSystemPrompt.js / buildDynamicContext.js / sessionMemory.js
 │   ├── package.json
-│   └── .env.example             # 环境变量示例（复制为 .env）
+│   └── .env.example
 ├── frontend/                    # 前端项目
 │   ├── public/                  # 静态资源
 │   │   ├── background.png       # 背景图片
@@ -70,12 +72,12 @@ asd_app/
 
 ### 3. AI对话
 - **智能问答**：通过本地后端调用 **DeepSeek**（经 **MCP** 子进程 `deepseek-mcp-server`），用户可与 AI 进行关于孤独症等方面的问答
-- **系统 Prompt**：由服务端 **`server/fixedSystemPrompt.js`** 统一注入（详见下文「AI 助手：接入 DeepSeek 与 Prompt」）；前端对话页不再提供 Prompt 编辑区
+- **系统 Prompt**：由服务端 **`server/fixedSystemPrompt.js`** 统一注入
 
 ### 4. 帮助中心
-- **常见问题**：提供孤独症相关的常见问题解答
-- **资源链接**：提供专业的孤独症相关资源和支持机构的链接
-- **联系我们**：提供联系方式，方便用户咨询
+- **知识图谱**：团队成员根据期刊文献内容，在NEO4j上构建的知识图谱，一键查找所需资源
+- **资源链接**：提供专业的孤独症照护相关资源、主任医师、支持机构的链接
+- **联系我们**：提供开发者团队的联系方式，方便用户咨询&对产品提出改进
 
 ### 5. 个人资料
 - **用户信息**：展示用户的基本信息
@@ -116,6 +118,8 @@ cd asd_app
 cd frontend
 npm install
 ```
+
+   - 帮助中心知识图谱：由 **`npm run build:kg`** 从 **`public/match-autism-spectrum-disorder.cx`** 生成 **`src/data/kg-graph.json`**（打包进前端，不依赖单独请求）并同步 **`public/kg-graph.json`**（可选，用于浏览器直接打开链接校验）。更新 CX 后请执行 `npm run build:kg` 或 `npm run build`。
 
 3. 安装 AI 网关依赖
 ```bash
@@ -169,6 +173,17 @@ npm run build
 
 这样 **API Key 只存在于服务器环境变量**，不会出现在前端代码或打包产物中。
 
+### MCP 连接方式（stdio / 远程 http）
+
+网关通过 **`@modelcontextprotocol/sdk`** 连接 DeepSeek 官方提供的 **`deepseek-mcp-server`**，支持两种传输（`server/.env`）：
+
+| 方式 | 环境变量 | 说明 |
+|------|-----------|------|
+| **stdio（默认）** | `DEEPSEEK_API_KEY` | 在本机用 Node 子进程启动 `node_modules/deepseek-mcp-server/build/index.js`，与 Cursor 里「本地 MCP」同类；无需单独再装全局 MCP。 |
+| **http** | `MCP_TRANSPORT=http`、`DEEPSEEK_MCP_AUTH_TOKEN` | 连接 **Streamable HTTP** 端点，默认 `DEEPSEEK_MCP_URL=https://deepseek-mcp.ragweld.com/mcp`；Token 为托管服务发放的 Bearer（见 [deepseek-mcp-server 文档](https://github.com/DMontgomery40/deepseek-mcp-server)）。 |
+
+二者选其一即可；启动后日志会打印当前 `transport=` 便于确认。
+
 ### 第一步：配置 DeepSeek API Key
 
 1. 登录 [DeepSeek 开放平台](https://platform.deepseek.com/)，创建 **API Key**。
@@ -206,8 +221,8 @@ DEEPSEEK_API_KEY="你的密钥"
 ### 接口说明（供联调）
 
 - **`POST /api/ai/chat`**  
-  - Body（JSON）：`{ "message": "用户当前输入", "systemPrompt": "可选，补充 system 文案，可省略" }`  
-  - 成功：`{ "text": "模型回复正文" }`  
+  - Body（JSON）：`{ "message": "…", "userId": "可选 Firebase uid", "conversationId": "可选，不传则新建", "systemPrompt": "可选" }`  
+  - 成功：`{ "text": "…", "conversationId": "…", "reflect": { "basicInfoLines", "lastEmotionalNote" } | null, "reflectOk": true/false }`  
   - 失败：HTTP 4xx/5xx，body 含 `error` 字段。
 
 ### 常见问题
@@ -218,9 +233,9 @@ DEEPSEEK_API_KEY="你的密钥"
 
 ---
 
-## AI 助手（规划）：对话要点摘要、照顾者状态与下一轮关心
+## AI 助手：对话要点摘要、照顾者状态与下一轮关心
 
-本节描述一项**尚未实现**的产品能力，并给出**完整技术路径**，便于后续排期与评审。
+**MVP 已在仓库中实现**。默认长期记忆在**进程内存**（`server` 重启清空）；配置 **`FIRESTORE_REFLECT`** 与 **服务账号** 后，**每个登录用户一份**档案写入 **Firestore**（路径见下文「Firestore 持久化」），跨对话、跨重启可用。下列「可行性 / 路径」仍保留作设计与扩展参考。
 
 ### 可行性结论
 
@@ -260,17 +275,18 @@ DEEPSEEK_API_KEY="你的密钥"
 
 | 接口 | 作用 |
 |------|------|
-| `POST /api/ai/chat`（现有） | 主对话；Body 增加可选 `conversationId`；服务端在拼 system 时**附加**上一步存好的 `summary + caregiverSignals + 关心指令**。 |
-| `POST /api/ai/reflect`（新） | **回合后**调用：Body 含 `conversationId`、本轮 `messages` 片段或 `turnId`；内部第二次 `callTool('chat_completion', …)`，使用**独立固定 Prompt**（如 `server/reflectSystemPrompt.js`），要求 **JSON 输出**（`response_format` 或 Prompt 内约定 + 服务端解析校验）。 |
-| （可选）`GET /api/ai/session/:id` | 调试或前端展示「本轮摘要」卡片。 |
+| `POST /api/ai/chat`（已实现） | Body：`message`、`userId`（建议）、`conversationId`（可选）。返回：`text`、`conversationId`、`reflect`、`reflectOk`。主对话后同步归纳写内存。 |
+| `POST /api/ai/session/reset`（已实现） | **仅匿名**：清空该 `conversationId` 下临时长期记忆。已登录用户调用不会删除账号级档案。 |
+| `GET /api/ai/session?conversationId=&userId=`（已实现） | 查询当前用户的长期记忆摘要（用于前端展示）。 |
+| `POST /api/ai/reflect` | 未单独暴露；由 `server/reflect.js` 在 `chat` 内调用。 |
 
-**调用顺序（服务端编排）**：
+**调用顺序（当前 MVP）**：
 
-1. 收到用户新消息 → 调 MCP **主对话** → 返回 assistant 正文给前端。  
-2. **异步**（推荐）或同步：用「本轮 user + assistant」调 **`/api/ai/reflect` 同源逻辑**（不要在 Express 里 HTTP 自调用，直接抽函数 `runReflect(...)`），更新 Firestore / 内存状态。  
-3. 用户发**下一条**时，`/api/ai/chat` 读取该状态，注入 system。
+1. 收到用户消息 → 按会话加锁 → 读取上轮归纳 → 注入主对话 system → MCP 主对话。  
+2. **同步**调用 `runReflect` 更新内存（失败则 `reflectOk: false`）。  
+3. 下一条消息重复；`care_opener` 等会进入 system，引导模型先关心再答。
 
-**异步 vs 同步**：异步可缩短用户首字等待时间，但存在「用户极快连发第二条时状态尚未写好」的竞态，需用 `turnId` 或队列串行化 per `conversationId`。
+**竞态**：`longTermMemory.js` 对已登录用户按 `ltm:user:{uid}` 加锁（匿名按 `ltm:anon:{conversationId}`）；`server` 重启后未配 Firestore 时内存清空。
 
 #### 3. 第二次 MCP 调用（归纳与状态）
 
@@ -310,6 +326,37 @@ DEEPSEEK_API_KEY="你的密钥"
 | 是否可能 | 可能；复用现有 MCP + `chat_completion`，增加「归纳」专用 Prompt 与存储。 |
 | 核心增量 | `reflect` 逻辑、会话状态存储、`/api/ai/chat` 动态 system 注入、前端 `conversationId` 与可选展示。 |
 | 风险 | 模型推断非真实心理状态；需免责、降级与 JSON 校验。 |
+
+### MVP 相关代码位置（已实现）
+
+| 文件 / 接口 | 说明 |
+|-------------|------|
+| `server/reflectSystemPrompt.js` | 归纳用 system Prompt（JSON 输出、非诊断约束） |
+| `server/reflect.js` | `runReflect`：第二次 `chat_completion`，`response_format: json_object` |
+| `server/buildDynamicContext.js` | 将上轮归纳拼进主对话 system |
+| `server/sessionMemory.js` | 进程内 Map 回退 + 按 `userId:conversationId` 串行锁 |
+| `server/longTermMemory.js` | 长期记忆读写：**每个登录用户一份**（`users/{uid}/aiLongTerm/default`）；匿名会话按 `conversationId` 存进程内存；启用 `FIRESTORE_REFLECT` 时登录用户写入 Firestore |
+| `server/index.js` | `/api/ai/chat`（按用户级锁 + 注入长期记忆）、`GET /api/ai/session`、`POST /api/ai/session/reset`（仅匿名清空临时记忆）；`/api/health` 返回 `reflectStore: firestore \| memory` |
+| `frontend/src/pages/AiChat/AiChat.jsx` | `conversationId` / `userId`、长期记忆折叠区、「新对话」仅换本地线程 id，**不清除**账号级长期记忆；进入页拉取 `/api/ai/session` |
+| 环境变量 `DEEPSEEK_REFLECT_MODEL`（可选） | 归纳所用模型，默认与 `DEEPSEEK_MODEL` 相同 |
+
+#### Firestore 持久化（登录用户的「长期记忆」）
+
+每个 Firebase 用户 **仅一份** 长期档案（`basicInfoLines`、`lastEmotionalNote`、`careOpener` 等），**跨所有对话线程共用**。默认只在 **Node 进程内存**；**配置 `FIRESTORE_REFLECT` 后写入 Firestore**，重启或多实例可读回（仅需同一 `userId`）。前端 `conversationId` 仅用于消息串与请求关联，**不再**区分不同 Firestore 文档。
+
+1. 在 [Firebase 控制台](https://console.firebase.google.com/) 打开本项目（如 `asd-app-4e926`）→ **项目设置** → **服务账号** → **生成新的私钥**，下载 JSON。  
+2. 将 JSON 放到 **`server/` 目录下**（勿提交 Git；`server/.gitignore` 已忽略常见服务账号文件名）。  
+3. 在 **`server/.env`** 中设置：  
+   - `FIRESTORE_REFLECT=true`  
+   - `FIREBASE_SERVICE_ACCOUNT_PATH=./你的文件.json`（相对 `server` 目录，或填绝对路径）  
+   或：不设路径，改用操作系统环境变量 **`GOOGLE_APPLICATION_CREDENTIALS`** 指向该 JSON（与 Google 云标准一致）。  
+4. 安装依赖已包含 **`firebase-admin`**；重启 `node index.js`。启动日志应出现 **「Firestore 长期记忆已启用」**；若初始化失败会回退内存并打警告。  
+5. **数据路径**：`users/{FirebaseAuthUid}/aiLongTerm/default`，文档字段含 `basicInfoLines`、`lastEmotionalNote`、`careOpener`、`lastReflectAt`、`schemaVersion`、`updatedAt`。仅 **服务端 Admin SDK** 读写。  
+6. **未登录**或请求未带有效 `userId`（服务端按 `anon` 处理）时，仍只用内存，按 `conversationId` 区分匿名临时档案，不写 Firestore。
+
+7. **网络**：运行 `server` 的机器需要能访问 **Google（Firestore）**。若出口无法连通（未代理时较常见），可能出现请求卡住或报错 `UNAVAILABLE` / `ETIMEDOUT`：可在 `.env` 中关闭 `FIRESTORE_REFLECT` 仅用内存，或为 Node 配置可访问 Google 的系统代理。仓库已对单次 Firestore 读/写设置超时（环境变量 `FIRESTORE_OP_TIMEOUT_MS`，默认 8000ms），超时后会**回退进程内存**并继续完成 AI 主回复。**同一 Node 进程内首次 Firestore 读/写失败后自动熔断**，之后不再尝试连 Firestore（直至重启），避免每条消息反复等待超时。
+
+**说明**：每轮用户消息会多一次 MCP 调用（归纳），首字延迟增加；归纳失败时主回复仍返回，`reflectOk` 为 `false`。归纳单独设有超时 `REFLECT_TIMEOUT_MS`（默认 25000ms）。
 
 ---
 

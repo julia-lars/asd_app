@@ -6,6 +6,7 @@ import Register from './pages/Auth/Register';
 import Social from './pages/Social/Social';
 import AiChat from './pages/AiChat/AiChat';
 import Help from './pages/Help/Help';
+import KnowledgeGraphPage from './pages/Help/KnowledgeGraphPage';
 import Profile from './pages/Profile/Profile';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/social" element={<Social />} />
           <Route path="/ai-chat" element={<AiChat />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/help/knowledge-graph" element={<KnowledgeGraphPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/" element={<Navigate to="/ai-chat" replace />} />
         </Routes>

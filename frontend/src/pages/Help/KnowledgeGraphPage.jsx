@@ -70,28 +70,28 @@ const KnowledgeGraphPage = () => {
             style: {
               'background-color': 'data(color)',
               label: 'data(label)',
-              color: '#f8fafc',
+              color: '#ffffff',
               'font-size': 9,
               'font-weight': 600,
               'text-valign': 'center',
               'text-halign': 'center',
               'text-wrap': 'wrap',
               'text-max-width': 84,
-              'text-outline-width': 2,
-              'text-outline-color': '#020617',
+              'text-outline-width': 1.5,
+              'text-outline-color': '#1e3a8a',
               width: 78,
               height: 32,
               padding: '8px',
               shape: 'round-rectangle',
               'border-width': 1.5,
-              'border-color': '#1e293b',
+              'border-color': '#dbeafe',
             },
           },
           {
             selector: 'node:selected',
             style: {
               'border-width': 3,
-              'border-color': '#38bdf8',
+              'border-color': '#0ea5e9',
               'z-index': 999,
             },
           },
@@ -103,8 +103,8 @@ const KnowledgeGraphPage = () => {
             selector: 'edge',
             style: {
               width: 1.2,
-              'line-color': '#cbd5e1',
-              'target-arrow-color': '#cbd5e1',
+              'line-color': '#93c5fd',
+              'target-arrow-color': '#93c5fd',
               'target-arrow-shape': 'triangle',
               'arrow-scale': 0.6,
               'curve-style': 'bezier',
@@ -115,8 +115,8 @@ const KnowledgeGraphPage = () => {
             selector: 'edge:selected',
             style: {
               opacity: 1,
-              'line-color': '#38bdf8',
-              'target-arrow-color': '#38bdf8',
+              'line-color': '#0284c7',
+              'target-arrow-color': '#0284c7',
               width: 2.5,
             },
           },
@@ -215,56 +215,56 @@ const KnowledgeGraphPage = () => {
 
   if (authLoading || !user) {
     return (
-      <div className="flex h-[100dvh] items-center justify-center bg-slate-950 text-slate-300 text-xl">
+      <div className="flex h-[100dvh] items-center justify-center bg-sky-50 text-sky-900 text-xl">
         加载中...
       </div>
     );
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden bg-slate-950 text-slate-100">
-      <header className="shrink-0 flex flex-wrap items-center gap-3 px-3 sm:px-4 py-2.5 border-b border-slate-700/80 bg-slate-900">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-sky-50 text-slate-900">
+      <header className="shrink-0 flex flex-wrap items-center gap-4 sm:gap-5 px-4 sm:px-6 py-3 border-b border-sky-100 bg-white/95 shadow-sm">
         <button
           type="button"
           onClick={() => navigate('/help')}
-          className="shrink-0 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+          className="shrink-0 rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
         >
-          ← 返回帮助中心
+          ← 返回
         </button>
-        <h1 className="text-base sm:text-lg font-semibold text-slate-100 truncate max-w-[min(40vw,12rem)] sm:max-w-xs">
+        <h1 className="text-base sm:text-lg font-semibold text-sky-950 truncate max-w-[min(40vw,12rem)] sm:max-w-xs">
           {title}
         </h1>
         {debugCount != null && (
-          <span className="text-[11px] text-emerald-400/90 tabular-nums">已载入 {debugCount} 条图元</span>
+          <span className="text-[11px] text-sky-600 tabular-nums">已载入 {debugCount} 条图元</span>
         )}
-        <div className="flex-1 min-w-[160px] basis-full sm:basis-auto order-last sm:order-none">
+        <div className="flex-1 min-w-[220px] basis-full sm:basis-auto order-last sm:order-none">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="按节点名称筛选…"
-            className="w-full rounded-lg border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+            className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-300/70"
           />
         </div>
         <button
           type="button"
           onClick={handleFit}
-          className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+          className="rounded-lg border border-sky-200 bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
         >
-          适应画布
+          还原
         </button>
       </header>
 
       {/* 固定像素高度，避免 flex+absolute 首帧高度为 0 导致 Cytoscape 画布不可见 */}
-      <div className="relative w-full shrink-0 bg-slate-950" style={{ height: 'calc(100dvh - 7.5rem)', minHeight: 440 }}>
+      <div className="relative w-full shrink-0 bg-sky-50" style={{ height: 'calc(100dvh - 7.5rem)', minHeight: 440 }}>
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/85 text-slate-300 text-lg">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-sky-50/85 text-sky-800 text-lg">
             正在加载图谱…
           </div>
         )}
         {error && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-slate-950/95 p-6 text-center">
-            <p className="text-red-300 max-w-md">{error}</p>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-sky-50/95 p-6 text-center">
+            <p className="text-red-600 max-w-md">{error}</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -276,7 +276,7 @@ const KnowledgeGraphPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/help')}
-                className="rounded-lg border border-slate-600 px-4 py-2 text-slate-200 text-sm hover:bg-slate-800"
+                className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sky-700 text-sm hover:bg-sky-50"
               >
                 返回
               </button>
@@ -285,14 +285,14 @@ const KnowledgeGraphPage = () => {
         )}
         <div
           ref={hostRef}
-          className="h-full w-full bg-slate-950"
+          className="h-full w-full bg-sky-50"
           style={{ minHeight: 440 }}
         />
       </div>
 
-      <footer className="shrink-0 border-t border-slate-700/80 bg-slate-900 px-3 py-2">
-        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{status}</p>
-        <p className="mt-0.5 text-[10px] text-slate-600">
+      <footer className="shrink-0 border-t border-sky-100 bg-white/95 px-3 py-2">
+        <p className="text-xs text-sky-900 leading-relaxed line-clamp-2">{status}</p>
+        <p className="mt-0.5 text-[10px] text-sky-400">
           若仍看不见节点：请点「适应画布」或缩小页面后刷新（数据为 src/data/kg-graph.json）
         </p>
       </footer>

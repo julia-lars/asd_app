@@ -65,6 +65,32 @@ body {
     );
 }
 
+/* Desktop: constrain app into an Android-phone-like viewport */
+.app-viewport {
+  width: 100%;
+  min-height: 100dvh;
+}
+
+@media (min-width: 520px) {
+  #root {
+    display: flex;
+    justify-content: center;
+  }
+
+  .app-viewport {
+    width: min(420px, 100%);
+    height: calc(100dvh - 28px);
+    min-height: 720px;
+    max-height: 920px;
+    border: 1px solid rgba(37, 66, 96, 0.14);
+    border-radius: 22px;
+    overflow: clip;
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 28px 70px rgba(28, 44, 62, 0.22);
+    margin: 14px 0;
+  }
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -79,6 +105,7 @@ body::before {
 
 #root {
   min-height: 100vh;
+  width: 100%;
   animation: page-fade 500ms ease-out;
 }
 

@@ -14,14 +14,22 @@ const FRONTEND_ROOT = path.join(__dirname, '..');
 
 /** @param {string} typeTag */
 function typeTagColor(typeTag) {
+  const palette = [
+    '#1d4ed8',
+    '#2563eb',
+    '#0284c7',
+    '#0ea5e9',
+    '#38bdf8',
+    '#60a5fa',
+    '#7dd3fc',
+    '#93c5fd',
+  ];
   let h = 2166136261;
   const s = String(typeTag || 'x');
   for (let i = 0; i < s.length; i += 1) {
     h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   }
-  const hue = (h >>> 0) % 360;
-  /* Canvas / 旧解析器需逗号分隔，避免 hsl(160 58% 46%) 不生效导致节点全透明 */
-  return `hsl(${hue}, 58%, 46%)`;
+  return palette[(h >>> 0) % palette.length];
 }
 
 /**

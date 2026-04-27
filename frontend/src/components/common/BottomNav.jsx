@@ -31,16 +31,16 @@ const BottomNav = () => {
   const shellStyle = {
     position: 'fixed',
     bottom: 0,
-    left: 0,
-    right: 0,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'min(420px, 100vw)',
     zIndex: 2147483647,
     padding: '0.65rem 0.85rem calc(0.9rem + env(safe-area-inset-bottom))',
     pointerEvents: 'none'
   };
 
   const panelStyle = {
-    maxWidth: '900px',
-    margin: '0 auto',
+    width: '100%',
     borderRadius: '18px',
     border: '1px solid rgba(66, 92, 123, 0.22)',
     background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(238, 246, 255, 0.9) 55%, rgba(224, 236, 250, 0.92))',

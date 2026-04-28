@@ -6,16 +6,16 @@ import { auth } from '../../services/firebase';
 import BottomNav from '../../components/common/BottomNav';
 
 const TEXT = {
-  loading: '\u52a0\u8f7d\u4e2d...',
-  welcome: '\u6b22\u8fce',
-  title: '\u4e2a\u4eba\u4e2d\u5fc3',
-  profile: '\u4e2a\u4eba\u4fe1\u606f',
-  email: '\u90ae\u7bb1',
-  uid: '\u7528\u6237ID',
-  settings: '\u8d26\u53f7\u8bbe\u7f6e',
-  resetPwd: '\u4fee\u6539\u5bc6\u7801',
-  bindPhone: '\u7ed1\u5b9a\u624b\u673a',
-  logout: '\u9000\u51fa\u767b\u5f55'
+  loading: '加载中...',
+  welcome: '欢迎',
+  title: '个人中心',
+  profile: '个人信息',
+  email: '邮箱',
+  uid: '用户ID',
+  settings: '账号设置',
+  resetPwd: '修改密码',
+  bindPhone: '绑定手机',
+  logout: '退出登录'
 };
 
 const Profile = () => {
@@ -23,7 +23,16 @@ const Profile = () => {
   const navigate = useNavigate();
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-2xl">{TEXT.loading}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-xl" style={{ color: 'var(--spa-muted)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+            style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
+          />
+          {TEXT.loading}
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -41,45 +50,84 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
-      <nav className="app-top-nav bg-white shadow-md">
+    <div className="min-h-screen pb-24">
+      <nav className="top-nav-glass">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
           <div className="flex items-center shrink-0 min-w-0">
             <img
               src="/logo.jpg"
               alt="logo"
-              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left"
+              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left rounded-lg"
             />
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
+            <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.welcome}, {user.email}
+            </span>
           </div>
         </div>
       </nav>
 
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">{TEXT.title}</h2>
+          <div className="glass-card p-8 mb-8 anim-scale-in">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
+                {TEXT.title}
+              </h2>
+            </div>
 
-            <div className="space-y-6">
-              <div className="border-b pb-4">
-                <h3 className="text-xl font-semibold mb-2">{TEXT.profile}</h3>
-                <p className="text-lg text-gray-700">{TEXT.email}: {user.email}</p>
-                <p className="text-lg text-gray-700">{TEXT.uid}: {user.uid}</p>
+            <div className="space-y-8">
+              <div className="profile-section anim-slide-up" style={{ animationDelay: '0ms' }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base">📋</span>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{TEXT.profile}</h3>
+                </div>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
+                      {TEXT.email}
+                    </span>
+                    <span className="text-sm" style={{ color: 'var(--spa-text)' }}>{user.email}</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
+                      {TEXT.uid}
+                    </span>
+                    <span className="text-xs font-mono truncate" style={{ color: 'var(--spa-text)' }}>
+                      {user.uid}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="border-b pb-4">
-                <h3 className="text-xl font-semibold mb-2">{TEXT.settings}</h3>
-                <p className="text-lg text-gray-700">{TEXT.resetPwd}</p>
-                <p className="text-lg text-gray-700">{TEXT.bindPhone}</p>
+              <div className="profile-section anim-slide-up" style={{ animationDelay: '60ms' }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base">⚙️</span>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{TEXT.settings}</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
+                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <span className="text-sm">🔑</span>
+                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.resetPwd}</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
+                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <span className="text-sm">📱</span>
+                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.bindPhone}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-4">
-                <button
-                  onClick={handleLogout}
-                  className="w-full bg-red-500 text-white py-3 px-6 rounded-md hover:bg-red-600 transition-colors text-xl"
-                >
+              <div className="pt-4 anim-slide-up" style={{ animationDelay: '120ms' }}>
+                <button onClick={handleLogout} className="btn-danger w-full">
                   {TEXT.logout}
                 </button>
               </div>

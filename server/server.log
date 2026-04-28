@@ -1,0 +1,3 @@
+[server] listening on http://localhost:3001
+[server] DeepSeek MCP: transport=stdio (local deepseek-mcp-server)
+[server] 未启用 FIRESTORE_REFLECT：长期记忆仅存进程内存，重启丢失

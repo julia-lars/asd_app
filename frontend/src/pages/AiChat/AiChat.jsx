@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import BottomNav from '../../components/common/BottomNav';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 const TEXT = {
-  loading: '\u52a0\u8f7d\u4e2d...',
-  welcome: '\u6b22\u8fce',
-  chatTitle: 'AI \u52a9\u624b',
-  placeholder: '\u8f93\u5165\u4f60\u7684\u95ee\u9898...',
-  send: '\u53d1\u9001',
+  loading: '加载中...',
+  welcome: '欢迎',
+  chatTitle: 'AI 助手',
+  placeholder: '输入你的问题...',
+  send: '发送',
   assistant: 'AI',
-  user: '\u6211',
-  hello: '\u4f60\u597d\uff0c\u6211\u662f\u4f60\u7684 AI \u52a9\u624b\u3002\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u52a9\u4f60\u7684\u5417\uff1f',
-  newChat: '\u65b0\u5bf9\u8bdd',
-  reflectTitle: '\u957f\u671f\u8bb0\u5fc6\uff08\u8de8\u5bf9\u8bdd\uff0c\u975e\u8bca\u65ad\uff09',
+  user: '我',
+  hello: '你好，我是你的 AI 助手。有什么我可以帮助你的吗？',
+  newChat: '新对话',
+  reflectTitle: '长期记忆（跨对话，非诊断）',
   reflectDisclaimer:
-    '\u4ee5\u4e0b\u7531 AI \u6839\u636e\u5386\u53f2\u5bf9\u8bdd\u5f52\u7eb3\uff0c\u4ec5\u8bb0\u5f55\u60a8\u81ea\u8ff0\u7684\u57fa\u672c\u4fe1\u606f\u4e0e\u6700\u540e\u4e00\u8f6e\u60c5\u7eea\u611f\u77e5\uff0c\u672a\u6838\u9a8c\u3001\u4e0d\u6784\u6210\u8bca\u65ad\u3002',
-  reflectPoints: '\u5df2\u77e5\u80cc\u666f\u8981\u70b9',
-  reflectSignals: '\u6700\u540e\u4e00\u8f6e\u60c5\u7eea\u4e0e\u652f\u6301\u9700\u6c42\uff08\u975e\u8bca\u65ad\uff09',
-  reflectFailed: '\u672c\u8f6e\u5f52\u7eb3\u672a\u5b8c\u6210\uff0c\u4e0b\u8f6e\u5173\u5fc3\u8bed\u5883\u53ef\u80fd\u7f3a\u5931\u3002'
+    '以下由 AI 根据历史对话归纳，仅记录您自述的基本信息与最后一轮情绪感知，未验证、不构成诊断。',
+  reflectPoints: '已知背景要点',
+  reflectSignals: '最后一轮情绪与支持需求（非诊断）',
+  reflectFailed: '本轮归纳未完成，下轮关心语境可能缺失。'
 };
 
 const AiChat = () => {
@@ -64,7 +66,7 @@ const AiChat = () => {
     (async () => {
       try {
         const q = new URLSearchParams({ userId: user.uid, conversationId });
-        const r = await fetch(`/api/ai/session?${q}`, { signal: ac.signal });
+        const r = await fetch(`${API_BASE}/api/ai/session?${q}`, { signal: ac.signal });
         if (!r.ok) return;
         const j = await r.json();
         if (j?.reflect) setLastReflect(j.reflect);
@@ -83,7 +85,7 @@ const AiChat = () => {
   }, [messages]);
 
   const fetchAIResponse = async (text) => {
-    const resp = await fetch('/api/ai/chat', {
+    const resp = await fetch(`${API_BASE}/api/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -186,7 +188,16 @@ const AiChat = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-2xl">{TEXT.loading}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-xl" style={{ color: 'var(--spa-muted)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+            style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
+          />
+          {TEXT.loading}
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -194,64 +205,110 @@ const AiChat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
-      <nav className="app-top-nav bg-white shadow-md">
+    <div className="min-h-screen pb-24">
+      <nav className="top-nav-glass">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
           <div className="flex items-center shrink-0 min-w-0">
             <img
               src="/logo.jpg"
               alt="logo"
-              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left"
+              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left rounded-lg"
             />
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
+            <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.welcome}, {user.email}
+            </span>
           </div>
         </div>
       </nav>
 
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-md border border-slate-200/60 overflow-hidden">
-            <div className="px-8 py-6 border-b border-white/70 bg-white/80 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl font-semibold">{TEXT.chatTitle}</h2>
-              <button
-                type="button"
-                onClick={startNewConversation}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg border border-blue-200 bg-white/80"
+          <div className="glass-card overflow-hidden anim-scale-in">
+            <div className="px-8 py-5 flex items-center"
+              style={{ borderBottom: '1px solid var(--spa-line)', background: 'rgba(255,255,255,0.5)' }}
+            >
+              <div className="flex-1" />
+              <h2 style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}
+                className="text-2xl font-semibold text-center flex-shrink-0"
               >
-                {TEXT.newChat}
-              </button>
+                {TEXT.chatTitle}
+              </h2>
+              <div className="flex-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={startNewConversation}
+                  className="btn-ghost text-sm"
+                >
+                  {TEXT.newChat}
+                </button>
+              </div>
             </div>
 
             {(lastReflect?.basicInfoLines?.length > 0 ||
               (lastReflect?.lastEmotionalNote && String(lastReflect.lastEmotionalNote).trim())) && (
-              <div className="px-8 py-4 border-b border-slate-100 bg-slate-50/90">
+              <div className="px-8 py-4 anim-slide-up"
+                style={{
+                  borderBottom: '1px solid var(--spa-line)',
+                  background: 'rgba(232, 240, 250, 0.5)'
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setReflectOpen((o) => !o)}
                   className="w-full flex justify-between items-center text-left gap-2"
                 >
-                  <span className="text-sm font-semibold text-slate-700">{TEXT.reflectTitle}</span>
-                  <span className="text-xs text-slate-500 shrink-0">{reflectOpen ? '收起' : '展开'}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🧠</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--spa-text)' }}>
+                      {TEXT.reflectTitle}
+                    </span>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.6)', color: 'var(--spa-muted)' }}
+                  >
+                    {reflectOpen ? '收起' : '展开'}
+                  </span>
                 </button>
                 {reflectOpen && (
-                  <div className="mt-3 space-y-3 text-[13px] text-slate-600 leading-relaxed">
-                    <p className="text-xs text-slate-500">{TEXT.reflectDisclaimer}</p>
+                  <div className="mt-3 space-y-3 text-[13px] leading-relaxed anim-slide-up"
+                    style={{ color: 'var(--spa-muted)' }}
+                  >
+                    <p className="text-xs px-3 py-2 rounded-lg"
+                      style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--spa-muted)' }}
+                    >
+                      {TEXT.reflectDisclaimer}
+                    </p>
                     {lastReflect.basicInfoLines?.length > 0 && (
                       <div>
-                        <div className="font-medium text-slate-700 mb-1">{TEXT.reflectPoints}</div>
-                        <ul className="list-disc pl-5 space-y-0.5">
+                        <div className="font-semibold mb-1.5 flex items-center gap-1.5"
+                          style={{ color: 'var(--spa-text)' }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-sage)' }} />
+                          {TEXT.reflectPoints}
+                        </div>
+                        <ul className="space-y-1 pl-4">
                           {lastReflect.basicInfoLines.map((b, i) => (
-                            <li key={i}>{b}</li>
+                            <li key={i} className="flex items-start gap-2">
+                              <span style={{ color: 'var(--spa-accent)' }}>•</span>
+                              {b}
+                            </li>
                           ))}
                         </ul>
                       </div>
                     )}
                     {lastReflect.lastEmotionalNote && String(lastReflect.lastEmotionalNote).trim() ? (
                       <div>
-                        <div className="font-medium text-slate-700 mb-1">{TEXT.reflectSignals}</div>
-                        <p className="whitespace-pre-wrap pl-0.5">
+                        <div className="font-semibold mb-1.5 flex items-center gap-1.5"
+                          style={{ color: 'var(--spa-text)' }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-rose)' }} />
+                          {TEXT.reflectSignals}
+                        </div>
+                        <p className="whitespace-pre-wrap pl-4"
+                          style={{ background: 'rgba(255,255,255,0.4)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}
+                        >
                           {String(lastReflect.lastEmotionalNote).trim()}
                         </p>
                       </div>
@@ -263,7 +320,12 @@ const AiChat = () => {
 
             <div
               ref={listRef}
-              className="h-[58vh] min-h-[420px] overflow-y-auto px-12 py-10 space-y-3 bg-[#fafbfc]"
+              className="overflow-y-auto px-6 py-8 space-y-5"
+              style={{
+                height: '58vh',
+                minHeight: 420,
+                background: 'rgba(250, 251, 252, 0.4)'
+              }}
             >
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
@@ -271,25 +333,22 @@ const AiChat = () => {
                 return (
                   <div
                     key={index}
-                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-1`}
+                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-1.5 anim-slide-up`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div
-                      className={`flex items-end gap-5 w-full ${
+                      className={`flex items-end gap-3 w-full ${
                         isUser ? 'justify-end' : 'justify-start'
                       }`}
                     >
                       {!isUser && (
-                        <div className="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-base font-bold shrink-0">
+                        <div className="avatar-circle avatar-ai">
                           🤖
                         </div>
                       )}
 
                       <div
-                        className={`max-w-[68%] px-7 py-4 rounded-3xl shadow-sm ${
-                          isUser
-                            ? 'bg-[#4285f4] text-white text-left'
-                            : 'bg-[#f0f2f5] text-gray-800 text-left'
-                        }`}
+                        className={`max-w-[72%] ${isUser ? 'msg-bubble-user' : 'msg-bubble-ai'}`}
                       >
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                           {message.content}
@@ -297,20 +356,21 @@ const AiChat = () => {
                       </div>
 
                       {isUser && (
-                        <div className="h-16 w-16 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-base font-bold shrink-0">
+                        <div className="avatar-circle avatar-user">
                           😊
                         </div>
                       )}
                     </div>
 
                     <div
-                      className={`flex items-center gap-2 text-[12px] text-gray-400 px-[54px] ${
+                      className={`flex items-center gap-2 text-[11px] px-12 ${
                         isUser ? 'justify-end' : 'justify-start'
                       }`}
+                      style={{ color: 'var(--spa-muted)' }}
                     >
                       {timeLabel && <span>{timeLabel}</span>}
                       {isUser && (
-                        <span>
+                        <span className="opacity-70">
                           {message.status === 'read'
                             ? '已读'
                             : message.status === 'sent'
@@ -324,20 +384,35 @@ const AiChat = () => {
               })}
             </div>
 
-            <div className="border-t border-white/70 px-[10px] py-6 bg-white/90">
-              <div className="flex items-center gap-3 rounded-full border border-[#e0e0e0] bg-white px-4 h-12 shadow-sm focus-within:border-[#4285f4] focus-within:shadow-[0_0_0_1px_rgba(66,133,244,0.12)]">
+            <div className="px-5 py-4"
+              style={{ borderTop: '1px solid var(--spa-line)', background: 'rgba(255,255,255,0.6)' }}
+            >
+              <div className="flex items-center gap-3 rounded-2xl px-4 h-12"
+                style={{
+                  border: '1.5px solid var(--spa-line)',
+                  background: 'rgba(255,255,255,0.85)',
+                  boxShadow: '0 2px 12px rgba(28,44,62,0.04)'
+                }}
+              >
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={TEXT.placeholder}
-                  className="flex-1 border-0 bg-transparent px-1 text-[15px] focus:outline-none focus:ring-0 placeholder-[#9e9e9e]"
+                  className="flex-1 border-0 bg-transparent px-1 text-[15px] focus:outline-none focus:ring-0"
+                  style={{ color: 'var(--spa-text)' }}
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-[#4285f4] text-white hover:scale-105 disabled:bg-gray-300 disabled:opacity-70 disabled:cursor-not-allowed transition-transform"
+                  className="flex items-center justify-center w-9 h-9 rounded-full text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: input.trim() && !sending
+                      ? 'linear-gradient(135deg, var(--spa-accent), var(--spa-accent-strong))'
+                      : 'rgba(200,200,200,0.5)',
+                    boxShadow: input.trim() && !sending ? '0 4px 16px rgba(122,154,184,0.3)' : 'none'
+                  }}
                 >
                   <span className="text-sm">{sending ? '…' : '✈️'}</span>
                 </button>
@@ -353,10 +428,3 @@ const AiChat = () => {
 };
 
 export default AiChat;
-
-
-
-
-
-
-

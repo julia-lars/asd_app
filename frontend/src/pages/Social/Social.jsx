@@ -6,15 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
 
 const TEXT = {
-  loading: '\u52a0\u8f7d\u4e2d...',
-  welcome: '\u6b22\u8fce',
-  defaultUser: '\u7528\u6237',
-  boardAlt: '\u516c\u544a\u680f\u56fe\u7247',
-  postTitle: '\u53d1\u5e03\u65b0\u52a8\u6001',
-  postPlaceholder: '\u5206\u4eab\u4f60\u7684\u7ecf\u9a8c\u548c\u611f\u53d7...',
-  publish: '\u53d1\u5e03',
-  community: '\u793e\u533a\u52a8\u6001',
-  empty: '\u8fd8\u6ca1\u6709\u52a8\u6001\uff0c\u5feb\u6765\u53d1\u5e03\u7b2c\u4e00\u6761\u5427\uff01'
+  loading: '加载中...',
+  welcome: '欢迎',
+  defaultUser: '用户',
+  boardAlt: '公告栏图片',
+  postTitle: '发布新动态',
+  postPlaceholder: '分享你的经验和感受...',
+  publish: '发布',
+  community: '社区动态',
+  empty: '还没有动态，快来发布第一条吧！'
 };
 
 const Social = () => {
@@ -76,7 +76,16 @@ const Social = () => {
   };
 
   if (authLoading || loading) {
-    return <div className="flex items-center justify-center h-screen text-2xl">{TEXT.loading}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-xl" style={{ color: 'var(--spa-muted)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+            style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
+          />
+          {TEXT.loading}
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -84,31 +93,35 @@ const Social = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24 relative">
-      <nav className="app-top-nav bg-white shadow-md">
+    <div className="min-h-screen pb-24 relative">
+      <nav className="top-nav-glass">
         <div className="max-w-full px-[80px] py-4 flex justify-between items-center">
           <div className="flex items-center shrink-0 min-w-0">
             <img
               src="/logo.jpg"
               alt="logo"
-              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left"
+              className="w-auto max-h-[2.5rem] shrink-0 object-contain object-left rounded-lg"
             />
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-xl text-gray-700">{TEXT.welcome}, {user.email}</span>
+            <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.welcome}, {user.email}
+            </span>
           </div>
         </div>
       </nav>
 
       <div className="max-w-full px-[80px] py-4">
-        <div className="w-full h-64 bg-gray-200 border-2 border-blue-500 flex items-center justify-center">
+        <div className="glass-card overflow-hidden anim-scale-in"
+          style={{ height: 'clamp(12rem, 38vw, 16rem)' }}
+        >
           <img
             src="/bulletin_board_1.jpg"
             alt={TEXT.boardAlt}
-            className="max-w-full max-h-full object-contain"
+            className="w-full h-full object-cover"
             onError={(e) => {
               console.error('Image load failed:', e.currentTarget.src);
-              e.currentTarget.src = 'https://via.placeholder.com/800x300?text=%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5';
+              e.currentTarget.style.display = 'none';
             }}
           />
         </div>
@@ -116,45 +129,73 @@ const Social = () => {
 
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">{TEXT.postTitle}</h2>
+          <div className="glass-card p-8 mb-8 anim-slide-up">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
+                {TEXT.postTitle}
+              </h2>
+            </div>
             <form onSubmit={handlePostSubmit}>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={TEXT.postPlaceholder}
-                className="w-full border rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xl"
+                className="spa-input resize-none"
+                style={{ minHeight: '100px' }}
                 rows={4}
               />
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-3 px-8 rounded-md hover:bg-blue-600 transition-colors text-xl"
-                >
+              <div className="mt-5 flex justify-end">
+                <button type="submit" className="btn-primary">
                   {TEXT.publish}
                 </button>
               </div>
             </form>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold p-6 border-b text-center">{TEXT.community}</h2>
+          <div className="anim-slide-up" style={{ animationDelay: '100ms' }}>
+            <div className="text-center mb-5">
+              <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
+                {TEXT.community}
+              </h2>
+            </div>
+
             {posts.length === 0 ? (
-              <div className="p-10 text-center text-gray-500 text-xl">{TEXT.empty}</div>
+              <div className="glass-card p-10 text-center anim-scale-in">
+                <div className="text-4xl mb-3">🌿</div>
+                <p className="text-lg" style={{ color: 'var(--spa-muted)' }}>{TEXT.empty}</p>
+              </div>
             ) : (
-              posts.map((post) => (
-                <div key={post.id} className="p-6 border-b last:border-0">
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-gray-800 text-xl">{post.userName}</h3>
-                      <span className="text-gray-400 text-lg">
-                        {post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : ''}
-                      </span>
+              <div className="space-y-3">
+                {posts.map((post, index) => (
+                  <div key={post.id} className="post-card anim-slide-up"
+                    style={{ animationDelay: `${index * 60}ms` }}
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(122,154,184,0.25), rgba(168,156,200,0.25))',
+                          color: 'var(--spa-accent-strong)'
+                        }}
+                      >
+                        {post.userName?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-base truncate" style={{ color: 'var(--spa-text)' }}>
+                            {post.userName}
+                          </h3>
+                          <span className="text-xs shrink-0" style={{ color: 'var(--spa-muted)' }}>
+                            {post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : ''}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-xl">{post.content}</p>
+                    <p className="text-sm leading-relaxed pl-12" style={{ color: 'var(--spa-muted)' }}>
+                      {post.content}
+                    </p>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>

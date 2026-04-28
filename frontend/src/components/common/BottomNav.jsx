@@ -7,24 +7,24 @@ const BottomNav = () => {
 
   const navItems = [
     {
-      label: '\u8d44\u8baf',
+      label: '资讯',
       path: '/social',
-      icon: '\uD83D\uDCF0'
+      icon: '📰'
     },
     {
-      label: 'AI\u52a9\u624b',
+      label: 'AI助手',
       path: '/ai-chat',
-      icon: '\uD83E\uDD16'
+      icon: '🤖'
     },
     {
-      label: '\u5e2e\u52a9',
+      label: '帮助',
       path: '/help',
-      icon: '\u2753'
+      icon: '❓'
     },
     {
-      label: '\u4e2a\u4eba',
+      label: '个人',
       path: '/profile',
-      icon: '\uD83D\uDC64'
+      icon: '👤'
     }
   ];
 
@@ -41,12 +41,12 @@ const BottomNav = () => {
 
   const panelStyle = {
     width: '100%',
-    borderRadius: '18px',
-    border: '1px solid rgba(66, 92, 123, 0.22)',
-    background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(238, 246, 255, 0.9) 55%, rgba(224, 236, 250, 0.92))',
-    boxShadow: '0 24px 46px rgba(28, 44, 62, 0.22), 0 2px 8px rgba(255, 255, 255, 0.55) inset',
-    backdropFilter: 'blur(18px) saturate(110%)',
-    WebkitBackdropFilter: 'blur(18px) saturate(110%)',
+    borderRadius: '20px',
+    border: '1px solid rgba(66, 92, 123, 0.18)',
+    background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.94), rgba(240, 248, 255, 0.92) 55%, rgba(230, 242, 255, 0.94))',
+    boxShadow: '0 24px 46px rgba(28, 44, 62, 0.18), 0 2px 8px rgba(255, 255, 255, 0.6) inset',
+    backdropFilter: 'blur(20px) saturate(130%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(130%)',
     overflow: 'hidden',
     pointerEvents: 'auto'
   };
@@ -64,7 +64,7 @@ const BottomNav = () => {
         <div
           style={{
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent)'
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent)'
           }}
         />
         <div style={rowStyle}>
@@ -81,23 +81,24 @@ const BottomNav = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: '1px solid transparent',
-                  borderRadius: '13px',
+                  borderRadius: '14px',
                   background: isActive
-                    ? 'linear-gradient(165deg, rgba(186, 209, 233, 0.72), rgba(156, 186, 217, 0.56))'
-                    : 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.15))',
+                    ? 'linear-gradient(165deg, rgba(186, 209, 233, 0.65), rgba(156, 186, 217, 0.5))'
+                    : 'linear-gradient(165deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2))',
                   boxShadow: isActive
-                    ? '0 10px 16px rgba(55, 84, 116, 0.24), 0 1px 0 rgba(255, 255, 255, 0.72) inset'
-                    : '0 1px 0 rgba(255, 255, 255, 0.42) inset',
-                  color: isActive ? '#2f4f70' : '#5f7490',
+                    ? '0 10px 16px rgba(55, 84, 116, 0.2), 0 1px 0 rgba(255, 255, 255, 0.8) inset'
+                    : '0 1px 0 rgba(255, 255, 255, 0.5) inset',
+                  color: isActive ? '#2f4f70' : '#6b8299',
                   cursor: 'pointer',
-                  fontWeight: isActive ? 700 : 600,
+                  fontWeight: isActive ? 700 : 500,
                   letterSpacing: '0.01em',
                   lineHeight: 1.1,
-                  transition: 'all 180ms ease'
+                  transition: 'all 200ms ease',
+                  transform: isActive ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <span style={{ marginBottom: '0.24rem', fontSize: '1.08rem' }}>{item.icon}</span>
-                <span style={{ fontSize: '0.81rem' }}>{item.label}</span>
+                <span style={{ marginBottom: '0.24rem', fontSize: '1.15rem' }}>{item.icon}</span>
+                <span style={{ fontSize: '0.78rem' }}>{item.label}</span>
               </button>
             );
           })}

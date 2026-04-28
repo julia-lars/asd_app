@@ -1,17 +1,18 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { auth, db } from '../../services/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 
 const TEXT = {
-  title: '\u6ce8\u518c',
-  name: '\u59d3\u540d',
-  email: '\u90ae\u7bb1',
-  password: '\u5bc6\u7801',
-  hasAccount: '\u5df2\u6709\u8d26\u53f7\uff1f',
-  login: '\u767b\u5f55',
-  register: '\u6ce8\u518c'
+  title: '注册',
+  subtitle: '开启温暖之旅，与我们相伴同行',
+  name: '姓名',
+  email: '邮箱',
+  password: '密码',
+  hasAccount: '已有账号？',
+  login: '登录',
+  register: '注册'
 };
 
 const Register = () => {
@@ -43,51 +44,76 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: 'url(/background.png)' }}>
-      <div className="bg-white bg-opacity-90 p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold text-center mb-6">{TEXT.title}</h2>
-        {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
+    <div className="auth-bg-overlay">
+      <div className="glass-card-strong p-8 w-96 anim-scale-in" style={{ maxWidth: 'min(24rem, calc(100vw - 2rem))' }}>
+        <div className="text-center mb-8">
+          <div className="text-4xl mb-3">🌱</div>
+          <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
+            {TEXT.title}
+          </h2>
+          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.subtitle}</p>
+        </div>
+
+        {error && (
+          <div className="mb-5 text-center text-sm py-2.5 px-4 rounded-xl"
+            style={{ background: 'var(--spa-danger-soft)', color: 'var(--spa-danger)' }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 mb-2">{TEXT.name}</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.name}
+            </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="spa-input"
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">{TEXT.email}</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.email}
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="spa-input"
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">{TEXT.password}</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
+              {TEXT.password}
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="spa-input"
               required
               minLength={6}
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+            className="btn-primary w-full mt-2"
           >
             {TEXT.register}
           </button>
         </form>
-        <div className="mt-4 text-center">
-          <p>{TEXT.hasAccount}<Link to="/login" className="text-blue-500 hover:underline">{TEXT.login}</Link></p>
+
+        <div className="mt-6 text-center text-sm" style={{ color: 'var(--spa-muted)' }}>
+          <p>
+            {TEXT.hasAccount}{' '}
+            <Link to="/login" className="font-semibold" style={{ color: 'var(--spa-accent-strong)' }}>
+              {TEXT.login}
+            </Link>
+          </p>
         </div>
       </div>
     </div>

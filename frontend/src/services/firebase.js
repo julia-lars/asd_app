@@ -1,8 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase配置
+// Firebase配置（仅用于 Firestore 数据库）
 const firebaseConfig = {
   apiKey: "AIzaSyDDxJxszAfwNV6UEw_tz5Sx69zy4uO_tlU",
   authDomain: "asd-app-4e926.firebaseapp.com",
@@ -16,7 +15,6 @@ const firebaseConfig = {
 // 初始化Firebase
 const app = initializeApp(firebaseConfig);
 
-// 获取认证和数据库实例
-export const auth = getAuth(app);
+// 仅导出数据库实例（认证已改用自建 JWT）
 export const db = getFirestore(app);
 export default app;

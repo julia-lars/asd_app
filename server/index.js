@@ -1,7 +1,10 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -111,6 +114,96 @@ async function getMcpClient() {
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+/* ========== JWT Auth ========== */
+const JWT_SECRET = process.env.JWT_SECRET || 'asd-app-jwt-secret-change-in-production';
+const USERS_FILE = path.join(__dirname, 'users.json');
+
+let users = {};
+function loadUsers() {
+  if (existsSync(USERS_FILE)) {
+    try {
+      users = JSON.parse(readFileSync(USERS_FILE, 'utf-8'));
+    } catch {
+      users = {};
+    }
+  }
+}
+function saveUsers() {
+  writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+loadUsers();
+
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: '未登录' });
+  }
+  const token = authHeader.slice(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ error: '登录已过期' });
+  }
+}
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, name } = req.body ?? {};
+    if (!email || !password) {
+      return res.status(400).json({ error: '邮箱和密码不能为空' });
+    }
+    if (users[email]) {
+      return res.status(400).json({ error: '该邮箱已被注册' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    users[email] = {
+      email,
+      name: name || email.split('@')[0],
+      password: hashedPassword,
+      role: 'family',
+      createdAt: new Date().toISOString(),
+    };
+    saveUsers();
+    const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { email, name: name || email.split('@')[0], uid: email } });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body ?? {};
+    if (!email || !password) {
+      return res.status(400).json({ error: '邮箱和密码不能为空' });
+    }
+    const user = users[email];
+    if (!user) {
+      return res.status(400).json({ error: '邮箱或密码错误' });
+    }
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(400).json({ error: '邮箱或密码错误' });
+    }
+    const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { email, name: user.name, uid: email } });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  const user = users[req.user.email];
+  if (!user) {
+    return res.status(401).json({ error: '用户不存在' });
+  }
+  res.json({ user: { email: user.email, name: user.name, uid: user.email } });
+});
+
+/* ========== Existing Routes ========== */
 
 app.get('/api/health', (_req, res) => {
   res.json({

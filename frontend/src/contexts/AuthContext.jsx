@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const AuthContext = createContext();
 
@@ -17,18 +17,51 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const token = localStorage.getItem('token');
+    if (!token) {
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+      return;
+    }
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => setUser(data.user))
+      .catch(() => localStorage.removeItem('token'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const value = {
-    user,
-    loading
+  const login = async (email, password) => {
+    const resp = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '登录失败');
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+    return data;
   };
 
+  const register = async (email, password, name) => {
+    const resp = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '注册失败');
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+    return data;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  const value = { user, loading, login, register, logout };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

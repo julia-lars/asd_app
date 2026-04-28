@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { auth } from '../../services/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TEXT = {
   title: '登录',
@@ -17,6 +16,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,7 +24,7 @@ const Login = () => {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await login(email, password);
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);

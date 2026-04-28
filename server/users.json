@@ -1,0 +1,9 @@
+{
+  "test@example.com": {
+    "email": "test@example.com",
+    "name": "测试用户",
+    "password": "$2b$10$1HRULeN1ud.3.j4K7ccj6OWAt9yS9eRa0w40OmnUDSIHR3YDn86HG",
+    "role": "family",
+    "createdAt": "2026-04-28T06:54:20.514Z"
+  }
+}

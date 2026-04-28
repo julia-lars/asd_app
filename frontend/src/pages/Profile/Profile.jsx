@@ -1,8 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../services/firebase';
 import BottomNav from '../../components/common/BottomNav';
 
 const TEXT = {
@@ -19,7 +17,7 @@ const TEXT = {
 };
 
 const Profile = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -40,13 +38,9 @@ const Profile = () => {
     return null;
   }
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (

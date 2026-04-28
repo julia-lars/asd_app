@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { auth, db } from '../../services/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TEXT = {
   title: '注册',
@@ -20,6 +18,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -27,16 +26,7 @@ const Register = () => {
     setError('');
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-        role: 'family',
-        createdAt: new Date()
-      });
-
+      await register(email, password, name);
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);

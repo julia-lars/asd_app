@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 // Firebase配置
 const firebaseConfig = {
   apiKey: "AIzaSyDDxJxszAfwNV6UEw_tz5Sx69zy4uO_tlU",
-  authDomain: "asd-app-4e926.firebaseapp.com",
+  authDomain: "asd-app-4e926.web.app",
   projectId: "asd-app-4e926",
   storageBucket: "asd-app-4e926.firebasestorage.app",
   messagingSenderId: "564399830384",

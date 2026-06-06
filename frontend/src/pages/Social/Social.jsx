@@ -4,21 +4,11 @@ import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from 'fi
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
-
-const TEXT = {
-  loading: '加载中...',
-  welcome: '欢迎',
-  defaultUser: '用户',
-  boardAlt: '公告栏图片',
-  postTitle: '发布新动态',
-  postPlaceholder: '分享你的经验和感受...',
-  publish: '发布',
-  community: '社区动态',
-  empty: '还没有动态，快来发布第一条吧！'
-};
+import { useLanguage } from '../../i18n';
 
 const Social = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t, formatDateTime } = useLanguage();
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,7 +48,7 @@ const Social = () => {
       await addDoc(collection(db, 'posts'), {
         content,
         userId: user.uid,
-        userName: user.displayName || TEXT.defaultUser,
+        userName: user.displayName || t('social.defaultUser'),
         createdAt: serverTimestamp()
       });
       setContent('');
@@ -82,7 +72,7 @@ const Social = () => {
           <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
           />
-          {TEXT.loading}
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -105,7 +95,7 @@ const Social = () => {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.welcome}, {user.email}
+              {t('common.welcomeUser', { email: user.email })}
             </span>
           </div>
         </div>
@@ -117,7 +107,7 @@ const Social = () => {
         >
           <img
             src="/bulletin_board_1.jpg"
-            alt={TEXT.boardAlt}
+            alt={t('social.boardAlt')}
             className="w-full h-full object-cover"
             onError={(e) => {
               console.error('Image load failed:', e.currentTarget.src);
@@ -132,21 +122,21 @@ const Social = () => {
           <div className="glass-card p-8 mb-8 anim-slide-up">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-                {TEXT.postTitle}
+                {t('social.postTitle')}
               </h2>
             </div>
             <form onSubmit={handlePostSubmit}>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder={TEXT.postPlaceholder}
+                placeholder={t('social.postPlaceholder')}
                 className="spa-input resize-none"
                 style={{ minHeight: '100px' }}
                 rows={4}
               />
               <div className="mt-5 flex justify-end">
                 <button type="submit" className="btn-primary">
-                  {TEXT.publish}
+                  {t('social.publish')}
                 </button>
               </div>
             </form>
@@ -155,14 +145,14 @@ const Social = () => {
           <div className="anim-slide-up" style={{ animationDelay: '100ms' }}>
             <div className="text-center mb-5">
               <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-                {TEXT.community}
+                {t('social.community')}
               </h2>
             </div>
 
             {posts.length === 0 ? (
               <div className="glass-card p-10 text-center anim-scale-in">
                 <div className="text-4xl mb-3">🌿</div>
-                <p className="text-lg" style={{ color: 'var(--spa-muted)' }}>{TEXT.empty}</p>
+                <p className="text-lg" style={{ color: 'var(--spa-muted)' }}>{t('social.empty')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -185,7 +175,7 @@ const Social = () => {
                             {post.userName}
                           </h3>
                           <span className="text-xs shrink-0" style={{ color: 'var(--spa-muted)' }}>
-                            {post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : ''}
+                            {post.createdAt ? formatDateTime(new Date(post.createdAt.toDate())) : ''}
                           </span>
                         </div>
                       </div>

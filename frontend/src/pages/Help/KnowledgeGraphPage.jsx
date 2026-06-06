@@ -2,18 +2,20 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { useNavigate } from 'react-router-dom';
 import cytoscape from 'cytoscape';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../i18n';
 /** 打包进 JS；更新请 npm run build:kg */
 import kgGraph from '../../data/kg-graph.json';
 
 const KnowledgeGraphPage = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const hostRef = useRef(null);
   const cyRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [title, setTitle] = useState('知识图谱');
-  const [status, setStatus] = useState('拖拽平移 · 滚轮缩放 · 点击节点或连线查看详情');
+  const [title, setTitle] = useState(() => t('kg.title'));
+  const [status, setStatus] = useState(() => t('kg.statusDefault'));
   const [search, setSearch] = useState('');
   const [debugCount, setDebugCount] = useState(null);
   const searchDebounce = useRef(0);
@@ -37,20 +39,20 @@ const KnowledgeGraphPage = () => {
 
     const elements = kgGraph?.elements;
     if (!Array.isArray(elements) || elements.length === 0) {
-      setError('图谱数据为空，请在 frontend 目录执行 npm run build:kg');
+      setError(t('kg.emptyData'));
       setLoading(false);
       setDebugCount(0);
       return undefined;
     }
 
-    setTitle(typeof kgGraph.networkName === 'string' ? kgGraph.networkName : '知识图谱');
+    setTitle(typeof kgGraph.networkName === 'string' ? kgGraph.networkName : t('kg.title'));
     setError(null);
     setLoading(true);
     setDebugCount(elements.length);
 
     const el = hostRef.current;
     if (!el) {
-      setError('内部错误：图谱容器未挂载');
+      setError(t('kg.containerError'));
       setLoading(false);
       return undefined;
     }
@@ -133,20 +135,20 @@ const KnowledgeGraphPage = () => {
       cy.on('tap', 'node', (evt) => {
         const n = evt.target;
         const deg = n.degree(false);
-        setStatus(`节点：${n.data('label')}  ·  类型：${n.data('typeTag')}  ·  连接数 ${deg}`);
+        setStatus(t('kg.nodeStatus', { label: n.data('label'), typeTag: n.data('typeTag'), degree: deg }));
       });
 
       cy.on('tap', 'edge', (evt) => {
         const e = evt.target;
         const src = e.source().data('label');
         const tgt = e.target().data('label');
-        const rel = e.data('label') || '关联';
-        setStatus(`关系：${src} —「${rel}」→ ${tgt}`);
+        const rel = e.data('label') || t('kg.defaultRelation');
+        setStatus(t('kg.edgeStatus', { source: src, relation: rel, target: tgt }));
       });
 
       cy.on('tap', (evt) => {
         if (evt.target === cy) {
-          setStatus('拖拽平移 · 滚轮缩放 · 点击节点或连线查看详情');
+          setStatus(t('kg.statusDefault'));
         }
       });
 
@@ -168,7 +170,7 @@ const KnowledgeGraphPage = () => {
     return () => {
       destroyCy();
     };
-  }, [authLoading, user, destroyCy]);
+  }, [authLoading, user, destroyCy, t]);
 
   useEffect(() => {
     const cy = cyRef.current;
@@ -183,17 +185,17 @@ const KnowledgeGraphPage = () => {
         if (!q) return;
         const match = cy.nodes().filter((n) => String(n.data('label') || '').toLowerCase().includes(q));
         if (match.length === 0) {
-          setStatus(`未找到包含「${search.trim()}」的节点`);
+          setStatus(t('kg.notFound', { query: search.trim() }));
           return;
         }
         const hood = match.closedNeighborhood();
         cy.elements().difference(hood).addClass('dim');
-        setStatus(`筛选：${match.length} 个节点及其邻域（清空搜索框恢复全图）`);
+        setStatus(t('kg.filtered', { count: match.length }));
       });
     }, 220);
 
     return () => window.clearTimeout(searchDebounce.current);
-  }, [search]);
+  }, [search, t]);
 
   useEffect(() => {
     const onResize = () => {
@@ -222,7 +224,7 @@ const KnowledgeGraphPage = () => {
           <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
           />
-          加载中...
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -247,7 +249,7 @@ const KnowledgeGraphPage = () => {
           className="btn-ghost text-xs shrink-0"
           style={{ padding: '0.4rem 0.75rem' }}
         >
-          返回
+          {t('common.back')}
         </button>
         <h1 className="text-sm font-semibold truncate"
           style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif', maxWidth: '8rem' }}
@@ -256,7 +258,7 @@ const KnowledgeGraphPage = () => {
         </h1>
         {debugCount != null && (
           <span className="text-[10px] tabular-nums shrink-0" style={{ color: 'var(--spa-muted)' }}>
-            {debugCount} 条
+            {t('kg.count', { count: debugCount })}
           </span>
         )}
         <div className="flex-1 min-w-0">
@@ -264,7 +266,7 @@ const KnowledgeGraphPage = () => {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="筛选…"
+            placeholder={t('kg.searchPlaceholder')}
             className="spa-input text-xs"
             style={{ padding: '0.4rem 0.6rem' }}
           />
@@ -275,7 +277,7 @@ const KnowledgeGraphPage = () => {
           className="btn-primary text-xs shrink-0"
           style={{ padding: '0.4rem 0.75rem' }}
         >
-          还原
+          {t('kg.fit')}
         </button>
       </header>
 
@@ -288,7 +290,7 @@ const KnowledgeGraphPage = () => {
               <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
                 style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
               />
-              正在加载图谱…
+              {t('kg.loadingGraph')}
             </div>
           </div>
         )}
@@ -303,14 +305,14 @@ const KnowledgeGraphPage = () => {
                 onClick={() => window.location.reload()}
                 className="btn-primary text-sm"
               >
-                重试
+                {t('common.retry')}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/help')}
                 className="btn-ghost text-sm"
               >
-                返回
+                {t('common.back')}
               </button>
             </div>
           </div>
@@ -332,7 +334,7 @@ const KnowledgeGraphPage = () => {
       >
         <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--spa-text)' }}>{status}</p>
         <p className="mt-0.5 text-[10px]" style={{ color: 'var(--spa-muted)' }}>
-          若仍看不见节点：请点「适应画布」或缩小页面后刷新（数据为 src/data/kg-graph.json）
+          {t('kg.invisibleHint')}
         </p>
       </footer>
     </div>

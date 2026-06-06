@@ -1,28 +1,30 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguage } from '../../i18n';
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navItems = [
     {
-      label: '资讯',
+      label: t('nav.social'),
       path: '/social',
       icon: '📰'
     },
     {
-      label: 'AI助手',
+      label: t('nav.aiChat'),
       path: '/ai-chat',
       icon: '🤖'
     },
     {
-      label: '帮助',
+      label: t('nav.help'),
       path: '/help',
       icon: '❓'
     },
     {
-      label: '个人',
+      label: t('nav.profile'),
       path: '/profile',
       icon: '👤'
     }

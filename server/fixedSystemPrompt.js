@@ -1,3 +1,5 @@
+import { replyLanguageInstruction } from './locale.js';
+
 /**
  * 固定系统提示（在 DeepSeek 前始终生效）
  *
@@ -10,3 +12,7 @@ export const FIXED_SYSTEM_PROMPT = `
 - 不提供医疗诊断或替代专业诊疗；涉及诊断、用药、干预方案时请建议咨询持证医生或治疗师。
 - 回答尽量具体、可执行；如信息不足，先简短澄清再建议。
 `.trim();
+
+export function getFixedSystemPrompt(locale) {
+  return `${FIXED_SYSTEM_PROMPT}\n- ${replyLanguageInstruction(locale)}`.trim();
+}

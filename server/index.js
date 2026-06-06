@@ -13,7 +13,8 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 import { buildLongTermContext } from './buildDynamicContext.js';
-import { FIXED_SYSTEM_PROMPT } from './fixedSystemPrompt.js';
+import { getFixedSystemPrompt } from './fixedSystemPrompt.js';
+import { localeFromRequest, serverMessage } from './locale.js';
 import { runReflect } from './reflect.js';
 import {
   clearAnonLongTermMemory,
@@ -135,9 +136,10 @@ function saveUsers() {
 loadUsers();
 
 function authMiddleware(req, res, next) {
+  const locale = localeFromRequest(req);
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: '未登录' });
+    return res.status(401).json({ error: serverMessage('auth.not_logged_in', locale) });
   }
   const token = authHeader.slice(7);
   try {
@@ -145,18 +147,19 @@ function authMiddleware(req, res, next) {
     req.user = decoded;
     next();
   } catch {
-    return res.status(401).json({ error: '登录已过期' });
+    return res.status(401).json({ error: serverMessage('auth.expired', locale) });
   }
 }
 
 app.post('/api/auth/register', async (req, res) => {
+  const locale = localeFromRequest(req);
   try {
     const { email, password, name } = req.body ?? {};
     if (!email || !password) {
-      return res.status(400).json({ error: '邮箱和密码不能为空' });
+      return res.status(400).json({ error: serverMessage('auth.email_password_required', locale) });
     }
     if (users[email]) {
-      return res.status(400).json({ error: '该邮箱已被注册' });
+      return res.status(400).json({ error: serverMessage('auth.email_registered', locale) });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     users[email] = {
@@ -175,18 +178,19 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
+  const locale = localeFromRequest(req);
   try {
     const { email, password } = req.body ?? {};
     if (!email || !password) {
-      return res.status(400).json({ error: '邮箱和密码不能为空' });
+      return res.status(400).json({ error: serverMessage('auth.email_password_required', locale) });
     }
     const user = users[email];
     if (!user) {
-      return res.status(400).json({ error: '邮箱或密码错误' });
+      return res.status(400).json({ error: serverMessage('auth.invalid_credentials', locale) });
     }
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      return res.status(400).json({ error: '邮箱或密码错误' });
+      return res.status(400).json({ error: serverMessage('auth.invalid_credentials', locale) });
     }
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { email, name: user.name, uid: email } });
@@ -196,9 +200,10 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', authMiddleware, (req, res) => {
+  const locale = localeFromRequest(req);
   const user = users[req.user.email];
   if (!user) {
-    return res.status(401).json({ error: '用户不存在' });
+    return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
   res.json({ user: { email: user.email, name: user.name, uid: user.email } });
 });
@@ -226,10 +231,11 @@ function memoryToReflectPayload(memory) {
 }
 
 app.get('/api/ai/session', async (req, res) => {
+  const locale = localeFromRequest(req);
   const userId = normalizeUserId(req.query.userId);
   const conversationId = typeof req.query.conversationId === 'string' ? req.query.conversationId : '';
   if (!conversationId.trim()) {
-    res.status(400).json({ error: '缺少 conversationId' });
+    res.status(400).json({ error: serverMessage('ai.conversation_required', locale) });
     return;
   }
   try {
@@ -245,30 +251,31 @@ app.get('/api/ai/session', async (req, res) => {
 });
 
 app.post('/api/ai/chat', async (req, res) => {
+  const locale = localeFromRequest(req);
   try {
     const { message, systemPrompt, conversationId: bodyCid, userId } = req.body ?? {};
     if (!message || typeof message !== 'string') {
-      res.status(400).json({ error: 'message 不能为空' });
+      res.status(400).json({ error: serverMessage('ai.message_required', locale) });
       return;
     }
 
     if (systemPrompt && typeof systemPrompt !== 'string') {
-      res.status(400).json({ error: 'systemPrompt 必须是字符串' });
+      res.status(400).json({ error: serverMessage('ai.system_prompt_string', locale) });
       return;
     }
 
     if (bodyCid !== undefined && bodyCid !== null && typeof bodyCid !== 'string') {
-      res.status(400).json({ error: 'conversationId 必须是字符串' });
+      res.status(400).json({ error: serverMessage('ai.conversation_string', locale) });
       return;
     }
 
     if (MCP_TRANSPORT === 'stdio' && !DEEPSEEK_API_KEY) {
-      res.status(500).json({ error: '未配置 DEEPSEEK_API_KEY（MCP_TRANSPORT=stdio）' });
+      res.status(500).json({ error: serverMessage('ai.deepseek_key_missing', locale) });
       return;
     }
 
     if (MCP_TRANSPORT === 'http' && !DEEPSEEK_MCP_AUTH_TOKEN) {
-      res.status(500).json({ error: '未配置 DEEPSEEK_MCP_AUTH_TOKEN（MCP_TRANSPORT=http）' });
+      res.status(500).json({ error: serverMessage('ai.mcp_token_missing', locale) });
       return;
     }
 
@@ -279,11 +286,12 @@ app.post('/api/ai/chat', async (req, res) => {
     const payload = await runWithLongTermLock(uidForLtm, conversationId, async () => {
       const client = await getMcpClient();
       const previousMemory = await getLongTermMemory(uidForLtm, conversationId);
-      const dynamicBlock = buildLongTermContext(previousMemory);
+      const dynamicBlock = buildLongTermContext(previousMemory, locale);
 
       const systemParts = [];
-      if (FIXED_SYSTEM_PROMPT.trim()) {
-        systemParts.push(FIXED_SYSTEM_PROMPT.trim());
+      const fixedSystemPrompt = getFixedSystemPrompt(locale);
+      if (fixedSystemPrompt.trim()) {
+        systemParts.push(fixedSystemPrompt.trim());
       }
       if (dynamicBlock) {
         systemParts.push(dynamicBlock);
@@ -322,11 +330,12 @@ app.post('/api/ai/chat', async (req, res) => {
         const parsed = await Promise.race([
           runReflect(client, {
             userText: message,
-            assistantText: text || '（空回复）',
+            assistantText: text || serverMessage('ai.empty_reply', locale),
             previousMemory,
+            locale,
           }),
           new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('归纳步骤超时')), REFLECT_TIMEOUT_MS);
+            setTimeout(() => reject(new Error(serverMessage('ai.reflect_timeout', locale))), REFLECT_TIMEOUT_MS);
           }),
         ]);
         if (parsed) {
@@ -360,9 +369,10 @@ app.post('/api/ai/chat', async (req, res) => {
  * 匿名会话可清空临时长期记忆；已登录用户长期记忆跨对话保留，此接口对其不删除 Firestore/内存档案。
  */
 app.post('/api/ai/session/reset', async (req, res) => {
+  const locale = localeFromRequest(req);
   const { conversationId, userId } = req.body ?? {};
   if (!conversationId || typeof conversationId !== 'string') {
-    res.status(400).json({ error: 'conversationId 必填' });
+    res.status(400).json({ error: serverMessage('ai.session_reset_required', locale) });
     return;
   }
   const uid = normalizeUserId(userId);
@@ -374,8 +384,8 @@ app.post('/api/ai/session/reset', async (req, res) => {
       ok: true,
       clearedLongTerm: !uid,
       note: uid
-        ? '已登录用户长期记忆未清除（全账号共用一份档案）；仅切换本地 conversationId 即可新对话。'
-        : '已清除该匿名会话下的临时长期记忆。',
+        ? serverMessage('ai.session_reset_user_note', locale)
+        : serverMessage('ai.session_reset_anon_note', locale),
     });
   } catch (err) {
     console.error('[server] POST /api/ai/session/reset', err);

@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { useAuth } from '../../contexts/AuthContext';
-
-const TEXT = {
-  title: '注册',
-  subtitle: '开启温暖之旅，与我们相伴同行',
-  name: '姓名',
-  email: '邮箱',
-  password: '密码',
-  hasAccount: '已有账号？',
-  login: '登录',
-  register: '注册'
-};
+import { useLanguage } from '../../i18n';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +10,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const { register } = useAuth();
+  const { locale, t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,7 +18,7 @@ const Register = () => {
     setError('');
 
     try {
-      await register(email, password, name);
+      await register(email, password, name, { locale, fallbackError: t('auth.error.registerFailed') });
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
@@ -36,12 +28,16 @@ const Register = () => {
   return (
     <div className="auth-bg-overlay">
       <div className="glass-card-strong p-8 w-96 anim-scale-in" style={{ maxWidth: 'min(24rem, calc(100vw - 2rem))' }}>
+        <div className="mb-5">
+          <LanguageSwitcher />
+        </div>
+
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🌱</div>
           <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-            {TEXT.title}
+            {t('auth.register.title')}
           </h2>
-          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.subtitle}</p>
+          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('auth.register.subtitle')}</p>
         </div>
 
         {error && (
@@ -54,7 +50,7 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.name}
+              {t('auth.name')}
             </label>
             <input
               type="text"
@@ -66,7 +62,7 @@ const Register = () => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.email}
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -78,7 +74,7 @@ const Register = () => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.password}
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -93,15 +89,15 @@ const Register = () => {
             type="submit"
             className="btn-primary w-full mt-2"
           >
-            {TEXT.register}
+            {t('auth.register.submit')}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm" style={{ color: 'var(--spa-muted)' }}>
           <p>
-            {TEXT.hasAccount}{' '}
+            {t('auth.register.hasAccount')}{' '}
             <Link to="/login" className="font-semibold" style={{ color: 'var(--spa-accent-strong)' }}>
-              {TEXT.login}
+              {t('auth.login.submit')}
             </Link>
           </p>
         </div>

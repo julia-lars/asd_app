@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const LOCALE_STORAGE_KEY = 'asd_app_locale';
 
 const AuthContext = createContext();
 
@@ -18,12 +19,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const locale = localStorage.getItem(LOCALE_STORAGE_KEY) || 'zh-CN';
     if (!token) {
       setLoading(false);
       return;
     }
     fetch(`${API_BASE}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'Accept-Language': locale },
     })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => setUser(data.user))
@@ -31,27 +33,29 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, options = {}) => {
+    const locale = options.locale || localStorage.getItem(LOCALE_STORAGE_KEY) || 'zh-CN';
     const resp = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
       body: JSON.stringify({ email, password }),
     });
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || '登录失败');
+    if (!resp.ok) throw new Error(data.error || options.fallbackError || '登录失败');
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data;
   };
 
-  const register = async (email, password, name) => {
+  const register = async (email, password, name, options = {}) => {
+    const locale = options.locale || localStorage.getItem(LOCALE_STORAGE_KEY) || 'zh-CN';
     const resp = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
       body: JSON.stringify({ email, password, name }),
     });
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || '注册失败');
+    if (!resp.ok) throw new Error(data.error || options.fallbackError || '注册失败');
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data;

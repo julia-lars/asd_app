@@ -2,31 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import BottomNav from '../../components/common/BottomNav';
+import { useLanguage } from '../../i18n';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-const TEXT = {
-  loading: '加载中...',
-  welcome: '欢迎',
-  chatTitle: 'AI 助手',
-  placeholder: '输入你的问题...',
-  send: '发送',
-  assistant: 'AI',
-  user: '我',
-  hello: '你好，我是你的 AI 助手。有什么我可以帮助你的吗？',
-  newChat: '新对话',
-  reflectTitle: '长期记忆（跨对话，非诊断）',
-  reflectDisclaimer:
-    '以下由 AI 根据历史对话归纳，仅记录您自述的基本信息与最后一轮情绪感知，未验证、不构成诊断。',
-  reflectPoints: '已知背景要点',
-  reflectSignals: '最后一轮情绪与支持需求（非诊断）',
-  reflectFailed: '本轮归纳未完成，下轮关心语境可能缺失。'
-};
-
 const AiChat = () => {
   const { user, loading } = useAuth();
+  const { locale, t, formatTime } = useLanguage();
   const [messages, setMessages] = useState(() => [
-    { role: 'assistant', content: TEXT.hello, createdAt: new Date() }
+    { role: 'assistant', kind: 'intro', content: '', createdAt: new Date() }
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -35,15 +19,6 @@ const AiChat = () => {
   const [reflectOpen, setReflectOpen] = useState(true);
   const navigate = useNavigate();
   const listRef = useRef(null);
-
-  const formatTime = (date) => {
-    if (!date) return '';
-    try {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return '';
-    }
-  };
 
   useEffect(() => {
     if (loading) return;
@@ -87,10 +62,11 @@ const AiChat = () => {
   const fetchAIResponse = async (text) => {
     const resp = await fetch(`${API_BASE}/api/ai/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
       body: JSON.stringify({
         message: text,
         userId: user.uid,
+        locale,
         ...(conversationId ? { conversationId } : {})
       })
     });
@@ -151,7 +127,7 @@ const AiChat = () => {
           ...updated,
           {
             role: 'assistant',
-            content: (replyText || '（未返回内容）') + (!reflectOk ? `\n\n（${TEXT.reflectFailed}）` : ''),
+            content: (replyText || t('ai.noReply')) + (!reflectOk ? `\n\n(${t('ai.reflectFailed')})` : ''),
             createdAt: new Date()
           }
         ];
@@ -162,7 +138,7 @@ const AiChat = () => {
         ...prev,
         {
           role: 'assistant',
-          content: `调用 DeepSeek 失败：${msg}`,
+          content: t('ai.callFailed', { message: msg }),
           createdAt: new Date()
         }
       ]);
@@ -184,7 +160,7 @@ const AiChat = () => {
         // ignore
       }
     }
-    setMessages([{ role: 'assistant', content: TEXT.hello, createdAt: new Date() }]);
+    setMessages([{ role: 'assistant', kind: 'intro', content: '', createdAt: new Date() }]);
   };
 
   if (loading) {
@@ -194,7 +170,7 @@ const AiChat = () => {
           <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
           />
-          {TEXT.loading}
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -217,7 +193,7 @@ const AiChat = () => {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.welcome}, {user.email}
+              {t('common.welcomeUser', { email: user.email })}
             </span>
           </div>
         </div>
@@ -233,7 +209,7 @@ const AiChat = () => {
               <h2 style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}
                 className="text-2xl font-semibold text-center flex-shrink-0"
               >
-                {TEXT.chatTitle}
+                {t('ai.chatTitle')}
               </h2>
               <div className="flex-1 flex justify-end">
                 <button
@@ -241,7 +217,7 @@ const AiChat = () => {
                   onClick={startNewConversation}
                   className="btn-ghost text-sm"
                 >
-                  {TEXT.newChat}
+                  {t('ai.newChat')}
                 </button>
               </div>
             </div>
@@ -262,13 +238,13 @@ const AiChat = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-base">🧠</span>
                     <span className="text-sm font-semibold" style={{ color: 'var(--spa-text)' }}>
-                      {TEXT.reflectTitle}
+                      {t('ai.reflectTitle')}
                     </span>
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full"
                     style={{ background: 'rgba(255,255,255,0.6)', color: 'var(--spa-muted)' }}
                   >
-                    {reflectOpen ? '收起' : '展开'}
+                    {reflectOpen ? t('common.collapse') : t('common.expand')}
                   </span>
                 </button>
                 {reflectOpen && (
@@ -278,7 +254,7 @@ const AiChat = () => {
                     <p className="text-xs px-3 py-2 rounded-lg"
                       style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--spa-muted)' }}
                     >
-                      {TEXT.reflectDisclaimer}
+                      {t('ai.reflectDisclaimer')}
                     </p>
                     {lastReflect.basicInfoLines?.length > 0 && (
                       <div>
@@ -286,7 +262,7 @@ const AiChat = () => {
                           style={{ color: 'var(--spa-text)' }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-sage)' }} />
-                          {TEXT.reflectPoints}
+                          {t('ai.reflectPoints')}
                         </div>
                         <ul className="space-y-1 pl-4">
                           {lastReflect.basicInfoLines.map((b, i) => (
@@ -304,7 +280,7 @@ const AiChat = () => {
                           style={{ color: 'var(--spa-text)' }}
                         >
                           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-rose)' }} />
-                          {TEXT.reflectSignals}
+                          {t('ai.reflectSignals')}
                         </div>
                         <p className="whitespace-pre-wrap pl-4"
                           style={{ background: 'rgba(255,255,255,0.4)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}
@@ -351,7 +327,7 @@ const AiChat = () => {
                         className={`max-w-[72%] ${isUser ? 'msg-bubble-user' : 'msg-bubble-ai'}`}
                       >
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                          {message.content}
+                          {message.kind === 'intro' ? t('ai.hello') : message.content}
                         </p>
                       </div>
 
@@ -372,9 +348,9 @@ const AiChat = () => {
                       {isUser && (
                         <span className="opacity-70">
                           {message.status === 'read'
-                            ? '已读'
+                            ? t('ai.read')
                             : message.status === 'sent'
-                              ? '已发送'
+                              ? t('ai.sent')
                               : ''}
                         </span>
                       )}
@@ -399,7 +375,7 @@ const AiChat = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder={TEXT.placeholder}
+                  placeholder={t('ai.placeholder')}
                   className="flex-1 border-0 bg-transparent px-1 text-[15px] focus:outline-none focus:ring-0"
                   style={{ color: 'var(--spa-text)' }}
                 />

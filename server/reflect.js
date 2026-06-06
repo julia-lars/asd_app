@@ -1,4 +1,4 @@
-import { REFLECT_SYSTEM_PROMPT } from './reflectSystemPrompt.js';
+import { getReflectSystemPrompt } from './reflectSystemPrompt.js';
 
 /**
  * @param {string} raw
@@ -27,7 +27,7 @@ export function parseReflectJson(raw) {
  * @param {import('@modelcontextprotocol/sdk/client/index.js').Client} client
  * @param {{ userText: string, assistantText: string, previousMemory: object | null }} input
  */
-export async function runReflect(client, { userText, assistantText, previousMemory }) {
+export async function runReflect(client, { userText, assistantText, previousMemory, locale }) {
   const parts = [
     '请根据以下材料输出 JSON（字段见 system 说明）。只输出 JSON。',
     '',
@@ -53,7 +53,7 @@ export async function runReflect(client, { userText, assistantText, previousMemo
     name: 'chat_completion',
     arguments: {
       messages: [
-        { role: 'system', content: REFLECT_SYSTEM_PROMPT },
+        { role: 'system', content: getReflectSystemPrompt(locale) },
         { role: 'user', content: parts.join('\n') },
       ],
       model: reflectModel,

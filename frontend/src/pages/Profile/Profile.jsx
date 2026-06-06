@@ -2,22 +2,12 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
-
-const TEXT = {
-  loading: '加载中...',
-  welcome: '欢迎',
-  title: '个人中心',
-  profile: '个人信息',
-  email: '邮箱',
-  uid: '用户ID',
-  settings: '账号设置',
-  resetPwd: '修改密码',
-  bindPhone: '绑定手机',
-  logout: '退出登录'
-};
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { useLanguage } from '../../i18n';
 
 const Profile = () => {
   const { user, loading, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   if (loading) {
@@ -27,7 +17,7 @@ const Profile = () => {
           <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
           />
-          {TEXT.loading}
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -56,7 +46,7 @@ const Profile = () => {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.welcome}, {user.email}
+              {t('common.welcomeUser', { email: user.email })}
             </span>
           </div>
         </div>
@@ -67,7 +57,7 @@ const Profile = () => {
           <div className="glass-card p-8 mb-8 anim-scale-in">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-                {TEXT.title}
+                {t('profile.title')}
               </h2>
             </div>
 
@@ -75,14 +65,14 @@ const Profile = () => {
               <div className="profile-section anim-slide-up" style={{ animationDelay: '0ms' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-base">📋</span>
-                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{TEXT.profile}</h3>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.profile')}</h3>
                 </div>
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 p-3 rounded-xl"
                     style={{ background: 'rgba(255,255,255,0.5)' }}
                   >
                     <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
-                      {TEXT.email}
+                      {t('profile.email')}
                     </span>
                     <span className="text-sm" style={{ color: 'var(--spa-text)' }}>{user.email}</span>
                   </div>
@@ -90,7 +80,7 @@ const Profile = () => {
                     style={{ background: 'rgba(255,255,255,0.5)' }}
                   >
                     <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
-                      {TEXT.uid}
+                      {t('profile.uid')}
                     </span>
                     <span className="text-xs font-mono truncate" style={{ color: 'var(--spa-text)' }}>
                       {user.uid}
@@ -102,27 +92,36 @@ const Profile = () => {
               <div className="profile-section anim-slide-up" style={{ animationDelay: '60ms' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-base">⚙️</span>
-                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{TEXT.settings}</h3>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.settings')}</h3>
                 </div>
                 <div className="space-y-4">
+                  <div className="p-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-sm">🌐</span>
+                      <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.language')}</span>
+                    </div>
+                    <LanguageSwitcher align="flex-start" />
+                  </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
                     style={{ background: 'rgba(255,255,255,0.5)' }}
                   >
                     <span className="text-sm">🔑</span>
-                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.resetPwd}</span>
+                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.resetPwd')}</span>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
                     style={{ background: 'rgba(255,255,255,0.5)' }}
                   >
                     <span className="text-sm">📱</span>
-                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.bindPhone}</span>
+                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.bindPhone')}</span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 anim-slide-up" style={{ animationDelay: '120ms' }}>
                 <button onClick={handleLogout} className="btn-danger w-full">
-                  {TEXT.logout}
+                  {t('profile.logout')}
                 </button>
               </div>
             </div>

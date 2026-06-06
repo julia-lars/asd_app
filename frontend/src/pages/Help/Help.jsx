@@ -2,22 +2,16 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
+import { useLanguage } from '../../i18n';
 
-const TEXT = {
-  loading: '加载中...',
-  welcome: '欢迎',
-  title: '帮助中心',
-  faq: '常见问题',
-  faqHint: '点击跳转至文献知识图谱专页（全屏可缩放、筛选）',
-  faqText: '这里提供孤独症相关的常见问题解答，帮助您更好地了解孤独症。',
-  resources: '资源链接',
-  resourcesText: '提供专业的孤独症相关资源和支持机构链接。',
-  contact: '联系我们',
-  contactText: '如果您有任何问题或建议，欢迎联系我们。'
+const TOOLBOX_LINKS = {
+  audio: 'https://www.ximalaya.com/search/%E5%86%A5%E6%83%B3%E6%94%BE%E6%9D%BE',
+  video: 'https://www.bilibili.com/search?keyword=%E5%91%BC%E5%90%B8%E6%94%BE%E6%9D%BE%E7%BB%83%E4%B9%A0',
 };
 
 const Help = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   if (loading) {
     return (
@@ -26,7 +20,7 @@ const Help = () => {
           <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--spa-accent)', borderTopColor: 'transparent' }}
           />
-          {TEXT.loading}
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -50,7 +44,7 @@ const Help = () => {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xl" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.welcome}, {user.email}
+              {t('common.welcomeUser', { email: user.email })}
             </span>
           </div>
         </div>
@@ -61,7 +55,7 @@ const Help = () => {
           <div className="glass-card p-8 mb-8 anim-scale-in">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-                {TEXT.title}
+                {t('help.title')}
               </h2>
             </div>
 
@@ -77,17 +71,17 @@ const Help = () => {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-base">❓</span>
                       <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>
-                        {TEXT.faq}
+                        {t('help.faq')}
                       </h3>
                     </div>
                     <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--spa-muted)' }}>
-                      {TEXT.faqText}
+                      {t('help.faqText')}
                     </p>
                     <p className="text-xs font-medium flex items-center gap-1"
                       style={{ color: 'var(--spa-accent-strong)' }}
                     >
                       <span>🔍</span>
-                      {TEXT.faqHint}
+                      {t('help.faqHint')}
                       <span>→</span>
                     </p>
                   </div>
@@ -97,31 +91,71 @@ const Help = () => {
                 </div>
               </button>
 
-              <div className="help-item anim-slide-up"
+              <div className="help-item help-toolbox anim-slide-up"
                 style={{ animationDelay: '60ms' }}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">🔗</span>
+                  <span className="text-base">🧰</span>
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>
-                    {TEXT.resources}
+                    {t('help.toolbox')}
                   </h3>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--spa-muted)' }}>
-                  {TEXT.resourcesText}
+                <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--spa-muted)' }}>
+                  {t('help.toolboxText')}
                 </p>
+                <div className="toolbox-link-grid" aria-label={t('help.toolboxLinksLabel')}>
+                  <a
+                    className="toolbox-link-slot"
+                    href={TOOLBOX_LINKS.audio}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span className="toolbox-link-icon">🎧</span>
+                    <span className="toolbox-link-copy">
+                      <span className="toolbox-link-title">{t('help.toolboxAudio')}</span>
+                      <span className="toolbox-link-note">{t('help.toolboxOpen')}</span>
+                    </span>
+                  </a>
+                  <a
+                    className="toolbox-link-slot"
+                    href={TOOLBOX_LINKS.video}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span className="toolbox-link-icon">🎬</span>
+                    <span className="toolbox-link-copy">
+                      <span className="toolbox-link-title">{t('help.toolboxVideo')}</span>
+                      <span className="toolbox-link-note">{t('help.toolboxOpen')}</span>
+                    </span>
+                  </a>
+                </div>
               </div>
 
               <div className="help-item anim-slide-up"
                 style={{ animationDelay: '120ms' }}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">📧</span>
+                  <span className="text-base">🔗</span>
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>
-                    {TEXT.contact}
+                    {t('help.resources')}
                   </h3>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--spa-muted)' }}>
-                  {TEXT.contactText}
+                  {t('help.resourcesText')}
+                </p>
+              </div>
+
+              <div className="help-item anim-slide-up"
+                style={{ animationDelay: '180ms' }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-base">📧</span>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>
+                    {t('help.contact')}
+                  </h3>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--spa-muted)' }}>
+                  {t('help.contactText')}
                 </p>
               </div>
             </div>

@@ -1,22 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { useAuth } from '../../contexts/AuthContext';
-
-const TEXT = {
-  title: '登录',
-  subtitle: '欢迎回来，继续您的温暖之旅',
-  email: '邮箱',
-  password: '密码',
-  noAccount: '还没有账号？',
-  register: '注册',
-  login: '登录'
-};
+import { useLanguage } from '../../i18n';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const { locale, t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,7 +17,7 @@ const Login = () => {
     setError('');
 
     try {
-      await login(email, password);
+      await login(email, password, { locale, fallbackError: t('auth.error.loginFailed') });
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
@@ -34,12 +27,16 @@ const Login = () => {
   return (
     <div className="auth-bg-overlay">
       <div className="glass-card-strong p-8 w-96 anim-scale-in" style={{ maxWidth: 'min(24rem, calc(100vw - 2rem))' }}>
+        <div className="mb-5">
+          <LanguageSwitcher />
+        </div>
+
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🌈</div>
           <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
-            {TEXT.title}
+            {t('auth.login.title')}
           </h2>
-          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{TEXT.subtitle}</p>
+          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('auth.login.subtitle')}</p>
         </div>
 
         {error && (
@@ -52,7 +49,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.email}
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -64,7 +61,7 @@ const Login = () => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
-              {TEXT.password}
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -78,15 +75,15 @@ const Login = () => {
             type="submit"
             className="btn-primary w-full mt-2"
           >
-            {TEXT.login}
+            {t('auth.login.submit')}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm" style={{ color: 'var(--spa-muted)' }}>
           <p>
-            {TEXT.noAccount}{' '}
+            {t('auth.login.noAccount')}{' '}
             <Link to="/register" className="font-semibold" style={{ color: 'var(--spa-accent-strong)' }}>
-              {TEXT.register}
+              {t('auth.register.submit')}
             </Link>
           </p>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../../i18n';
 
 const ImageCarousel = ({ 
   images = [], 
@@ -10,6 +11,7 @@ const ImageCarousel = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState({});
   const intervalRef = useRef(null);
+  const { t } = useLanguage();
 
   // 自动播放
   useEffect(() => {
@@ -76,7 +78,7 @@ const ImageCarousel = ({
               {loadedImages[index] ? (
                 <img
                   src={image}
-                  alt={`轮播图片 ${index + 1}`}
+                  alt={t('carousel.imageAlt', { index: index + 1 })}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -95,14 +97,14 @@ const ImageCarousel = ({
           <button
             onClick={handlePrev}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2 focus:outline-none"
-            aria-label="上一张"
+            aria-label={t('carousel.prev')}
           >
             ‹
           </button>
           <button
             onClick={handleNext}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2 focus:outline-none"
-            aria-label="下一张"
+            aria-label={t('carousel.next')}
           >
             ›
           </button>
@@ -117,7 +119,7 @@ const ImageCarousel = ({
               key={index}
               onClick={() => handleDotClick(index)}
               className={`w-3 h-3 rounded-full transition-colors ${index === currentIndex ? 'bg-blue-500' : 'bg-white bg-opacity-50 hover:bg-opacity-75'}`}
-              aria-label={`切换到图片 ${index + 1}`}
+              aria-label={t('carousel.goto', { index: index + 1 })}
             />
           ))}
         </div>

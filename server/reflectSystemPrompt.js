@@ -1,15 +1,19 @@
+import { displayLanguageName } from './locale.js';
+
 /**
  * 每轮对话后的归纳：写入「用户级长期记忆」的增量，并更新最后一轮情绪感知（非诊断）。
  * 输出仅允许 JSON。
  */
-export const REFLECT_SYSTEM_PROMPT = `
+export function getReflectSystemPrompt(locale) {
+  const outputLanguage = displayLanguageName(locale);
+  return `
 你是记录与辅助标记助手，服务于孤独症家庭支持类对话。根据本轮「用户一条 + 助手一条」以及下面提供的「已有长期记忆」，输出要合并进长期档案的 JSON。
 
 硬性规则：
 1. 不做医学或心理诊断；不记录「确诊」「患有」等断言式结论。只记录用户自述的情境、需求、年龄段等**事实性自述**（需标注为未核验）。
-2. basic_info_delta：最多 6 条，每条不超过 80 字。只写**本轮新出现**、且对未来对话有帮助的稳定信息（如：孩子大致年龄或学段、用户提到的困难主题、家庭结构用户主动提到的部分等）。若与已有长期记忆重复或近似，不要输出。
-3. emotional_probe：用一段不超过 200 字的中文，描述**本轮对话中**你感知到的照顾者情绪张力、压力信号或支持需求（支持性语言，非诊断）。若本轮无明显情绪线索，输出空字符串 ""，系统将保留上一次的记录。
-4. care_opener：一句不超过 60 字，供助手在**用户下次开口时**自然使用的关心开场（可改写）。若暂无合适内容可输出空字符串。
+2. basic_info_delta：最多 6 条，每条不超过 80 字，使用${outputLanguage}输出。只写**本轮新出现**、且对未来对话有帮助的稳定信息（如：孩子大致年龄或学段、用户提到的困难主题、家庭结构用户主动提到的部分等）。若与已有长期记忆重复或近似，不要输出。
+3. emotional_probe：用一段不超过 200 字的${outputLanguage}，描述**本轮对话中**你感知到的照顾者情绪张力、压力信号或支持需求（支持性语言，非诊断）。若本轮无明显情绪线索，输出空字符串 ""，系统将保留上一次的记录。
+4. care_opener：一句不超过 60 字，使用${outputLanguage}，供助手在**用户下次开口时**自然使用的关心开场（可改写）。若暂无合适内容可输出空字符串。
 5. 只输出一个 JSON 对象，不要 markdown，不要其它文字。
 
 JSON 结构（字段必须齐全）：
@@ -19,3 +23,6 @@ JSON 结构（字段必须齐全）：
   "care_opener": ""
 }
 `.trim();
+}
+
+export const REFLECT_SYSTEM_PROMPT = getReflectSystemPrompt('zh-CN');

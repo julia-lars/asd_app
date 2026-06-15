@@ -32,6 +32,54 @@ const TEMPLATES = {
     emotion: '【이전 대화에서의 감정 및 지원 필요 관찰(진단 아님)】',
     opener: '【추천 시작 문장】사용자가 다시 말할 때 아래 문장을 참고해 자연스럽게 짧은 관심을 표현할 수 있습니다：',
     finalInstruction: '먼저 짧게 관심을 표현하거나 상황을 받아준 뒤, 이번 질문에 답하세요.'
+  },
+  es: {
+    title: '[Memoria a largo plazo del usuario (resumida de conversaciones anteriores; autoinformada, no verificada, no diagnóstica)]',
+    disclaimer: 'Use esta información solo para continuidad y tono de apoyo. Si contradice el mensaje actual del usuario, priorice el mensaje actual.',
+    background: '[Datos de contexto conocidos]',
+    emotion: '[Observación de la conversación anterior sobre emociones/necesidades de apoyo (no diagnóstica)]',
+    opener: '[Apertura sugerida] Cuando el usuario vuelva a escribir, puede empezar con una frase breve y natural de cuidado inspirada en esto:',
+    finalInstruction: 'Primero reconozca brevemente la situación del usuario o muestre cuidado, luego responda la pregunta actual.'
+  },
+  fr: {
+    title: '[Mémoire à long terme de l’utilisateur (résumée depuis des conversations passées ; autodéclarée, non vérifiée, non diagnostique)]',
+    disclaimer: 'Utilisez ces informations uniquement pour la continuité et un ton bienveillant. Si elles contredisent le message actuel, privilégiez le message actuel.',
+    background: '[Éléments de contexte connus]',
+    emotion: '[Observation de la conversation précédente sur les émotions/besoins de soutien (non diagnostique)]',
+    opener: '[Ouverture suggérée] Lorsque l’utilisateur revient, vous pouvez commencer naturellement par une courte phrase de soutien inspirée de ceci :',
+    finalInstruction: 'Exprimez d’abord brièvement de l’attention ou reconnaissez la situation, puis répondez à la question actuelle.'
+  },
+  de: {
+    title: '[Langzeitgedächtnis des Nutzers (aus früheren Chats zusammengefasst; selbstberichtet, ungeprüft, nicht diagnostisch)]',
+    disclaimer: 'Verwende diese Informationen nur für Kontinuität und einen unterstützenden Ton. Wenn sie der aktuellen Aussage widersprechen, hat die aktuelle Aussage Vorrang.',
+    background: '[Bekannte Hintergrundpunkte]',
+    emotion: '[Beobachtung aus dem vorherigen Chat zu Emotionen/Unterstützungsbedarf (nicht diagnostisch)]',
+    opener: '[Vorgeschlagener Einstieg] Wenn der Nutzer wieder schreibt, kannst du natürlich mit einem kurzen fürsorglichen Satz beginnen, der hiervon inspiriert ist:',
+    finalInstruction: 'Zeige zuerst kurz Fürsorge oder erkenne die Situation an, dann beantworte die aktuelle Frage.'
+  },
+  ar: {
+    title: '[ذاكرة المستخدم طويلة المدى (ملخصة من محادثات سابقة؛ معلومات ذاتية غير موثقة وغير تشخيصية)]',
+    disclaimer: 'استخدم هذه المعلومات فقط للحفاظ على استمرارية الحديث والنبرة الداعمة. إذا تعارضت مع رسالة المستخدم الحالية، فالأولوية للرسالة الحالية.',
+    background: '[نقاط خلفية معروفة]',
+    emotion: '[ملاحظة من المحادثة السابقة حول المشاعر/احتياجات الدعم (غير تشخيصية)]',
+    opener: '[افتتاحية مقترحة] عندما يكتب المستخدم مرة أخرى، يمكنك البدء بجملة قصيرة داعمة مستوحاة من الآتي:',
+    finalInstruction: 'ابدأ أولًا بتعاطف قصير أو اعتراف بالموقف، ثم أجب عن السؤال الحالي.'
+  },
+  pt: {
+    title: '[Memória de longo prazo do usuário (resumida de conversas anteriores; autodeclarada, não verificada, não diagnóstica)]',
+    disclaimer: 'Use estas informações apenas para continuidade e tom de apoio. Se houver conflito com a mensagem atual do usuário, priorize a mensagem atual.',
+    background: '[Pontos de contexto conhecidos]',
+    emotion: '[Observação da conversa anterior sobre emoções/necessidades de apoio (não diagnóstica)]',
+    opener: '[Abertura sugerida] Quando o usuário voltar a escrever, você pode começar naturalmente com uma frase breve de cuidado inspirada nisto:',
+    finalInstruction: 'Primeiro reconheça brevemente a situação ou demonstre cuidado, depois responda à pergunta atual.'
+  },
+  ru: {
+    title: '[Долгосрочная память пользователя (обобщено из прошлых чатов; со слов пользователя, не проверено, не диагностика)]',
+    disclaimer: 'Используйте эту информацию только для непрерывности беседы и поддерживающего тона. Если она противоречит текущему сообщению пользователя, приоритет у текущего сообщения.',
+    background: '[Известные сведения]',
+    emotion: '[Наблюдение из предыдущего чата об эмоциях/потребностях в поддержке (не диагностика)]',
+    opener: '[Рекомендуемое начало] Когда пользователь снова напишет, можно естественно начать с короткой заботливой фразы, вдохновленной этим:',
+    finalInstruction: 'Сначала кратко проявите поддержку или признайте ситуацию, затем ответьте на текущий вопрос.'
   }
 };
 

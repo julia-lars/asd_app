@@ -11,6 +11,12 @@ export function normalizeLocale(value) {
   if (normalized.startsWith('en')) return 'en';
   if (normalized.startsWith('ja') || normalized.startsWith('jp')) return 'ja';
   if (normalized.startsWith('ko') || normalized.startsWith('kr')) return 'ko';
+  if (normalized.startsWith('es')) return 'es';
+  if (normalized.startsWith('fr')) return 'fr';
+  if (normalized.startsWith('de')) return 'de';
+  if (normalized.startsWith('ar')) return 'ar';
+  if (normalized.startsWith('pt')) return 'pt';
+  if (normalized.startsWith('ru')) return 'ru';
   return DEFAULT_LOCALE;
 }
 
@@ -89,6 +95,7 @@ export const LanguageProvider = ({ children }) => {
       // ignore storage errors
     }
     document.documentElement.lang = locale;
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
     document.title = readMessage(locale, 'app.title');
   }, [locale]);
 

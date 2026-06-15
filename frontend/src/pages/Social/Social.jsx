@@ -6,6 +6,25 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
 import { useLanguage } from '../../i18n';
 
+const COMMUNITY_EXAMPLE_MESSAGES = [
+  {
+    userName: 'User1',
+    content: '“We have another dentist appointment tomorrow. Last time, my son wouldn’t even sit in the chair.”',
+  },
+  {
+    userName: 'User2',
+    content: '“I feel you. We went through three dentists before finding one who understood sensory meltdowns.”',
+  },
+  {
+    userName: 'User1',
+    content: '“I barely slept last night. Sometimes I wonder if I’m even helping him or just surviving.”',
+  },
+  {
+    userName: 'User3',
+    content: '“You’re not alone. Be kind to yourself.”',
+  },
+];
+
 const Social = () => {
   const { user, loading: authLoading } = useAuth();
   const { t, formatDateTime } = useLanguage();
@@ -147,6 +166,21 @@ const Social = () => {
               <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
                 {t('social.community')}
               </h2>
+            </div>
+
+            <div className="community-example-card anim-slide-up" style={{ animationDelay: '80ms' }}>
+              <div className="community-thread" aria-label="社区对话">
+                {COMMUNITY_EXAMPLE_MESSAGES.map((message, index) => (
+                  <div key={`${message.userName}-${index}`} className="community-message">
+                    <div className="community-speaker">
+                      {message.userName.replace('User', 'U')}
+                    </div>
+                    <div className="community-message-bubble">
+                      <p>{message.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {posts.length === 0 ? (

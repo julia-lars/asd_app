@@ -94,6 +94,7 @@ function textFromMcpToolResult(result) {
 }
 
 const REFLECT_TIMEOUT_MS = Number(process.env.REFLECT_TIMEOUT_MS ?? 25000);
+const CHAT_MAX_TOKENS = Number.parseInt(process.env.DEEPSEEK_MAX_TOKENS ?? '700', 10);
 
 async function getMcpClient() {
   if (mcpClientPromise) return mcpClientPromise;
@@ -319,6 +320,7 @@ app.post('/api/ai/chat', async (req, res) => {
           messages,
           model: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
           temperature: 0.7,
+          max_tokens: Number.isFinite(CHAT_MAX_TOKENS) && CHAT_MAX_TOKENS > 0 ? CHAT_MAX_TOKENS : 700,
         },
       });
 

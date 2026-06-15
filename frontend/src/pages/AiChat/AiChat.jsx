@@ -6,6 +6,8 @@ import { useLanguage } from '../../i18n';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
+const stripAssistantBoldMarkers = (value) => String(value ?? '').replace(/\*\*/g, '');
+
 const AiChat = () => {
   const { user, loading } = useAuth();
   const { locale, t, formatTime } = useLanguage();
@@ -15,8 +17,6 @@ const AiChat = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const [lastReflect, setLastReflect] = useState(null);
-  const [reflectOpen, setReflectOpen] = useState(true);
   const navigate = useNavigate();
   const listRef = useRef(null);
 
@@ -34,24 +34,6 @@ const AiChat = () => {
       // ignore
     }
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (!user?.uid || !conversationId) return undefined;
-    const ac = new AbortController();
-    (async () => {
-      try {
-        const q = new URLSearchParams({ userId: user.uid, conversationId });
-        const r = await fetch(`${API_BASE}/api/ai/session?${q}`, { signal: ac.signal });
-        if (!r.ok) return;
-        const j = await r.json();
-        if (j?.reflect) setLastReflect(j.reflect);
-        else setLastReflect(null);
-      } catch {
-        if (ac.signal.aborted) return;
-      }
-    })();
-    return () => ac.abort();
-  }, [user?.uid, conversationId]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -87,10 +69,7 @@ const AiChat = () => {
         // ignore
       }
     }
-    if (data?.reflect) {
-      setLastReflect(data.reflect);
-    }
-    return { replyText, reflectOk: data?.reflectOk === true };
+    return replyText;
   };
 
   const handleSend = async () => {
@@ -113,7 +92,7 @@ const AiChat = () => {
     setSending(true);
 
     try {
-      const { replyText, reflectOk } = await fetchAIResponse(text);
+      const replyText = await fetchAIResponse(text);
       setMessages((prev) => {
         const updated = [...prev];
         for (let i = updated.length - 1; i >= 0; i -= 1) {
@@ -127,7 +106,7 @@ const AiChat = () => {
           ...updated,
           {
             role: 'assistant',
-            content: (replyText || t('ai.noReply')) + (!reflectOk ? `\n\n(${t('ai.reflectFailed')})` : ''),
+            content: stripAssistantBoldMarkers(replyText || t('ai.noReply')),
             createdAt: new Date()
           }
         ];
@@ -138,7 +117,7 @@ const AiChat = () => {
         ...prev,
         {
           role: 'assistant',
-          content: t('ai.callFailed', { message: msg }),
+          content: stripAssistantBoldMarkers(t('ai.callFailed', { message: msg })),
           createdAt: new Date()
         }
       ]);
@@ -216,90 +195,18 @@ const AiChat = () => {
                   type="button"
                   onClick={startNewConversation}
                   className="btn-ghost text-sm"
+                  style={{ padding: '0.35rem 0.72rem', fontSize: '0.78rem', borderRadius: '999px' }}
                 >
-                  {t('ai.newChat')}
+                  New
                 </button>
               </div>
             </div>
-
-            {(lastReflect?.basicInfoLines?.length > 0 ||
-              (lastReflect?.lastEmotionalNote && String(lastReflect.lastEmotionalNote).trim())) && (
-              <div className="px-8 py-4 anim-slide-up"
-                style={{
-                  borderBottom: '1px solid var(--spa-line)',
-                  background: 'rgba(232, 240, 250, 0.5)'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setReflectOpen((o) => !o)}
-                  className="w-full flex justify-between items-center text-left gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🧠</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--spa-text)' }}>
-                      {t('ai.reflectTitle')}
-                    </span>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.6)', color: 'var(--spa-muted)' }}
-                  >
-                    {reflectOpen ? t('common.collapse') : t('common.expand')}
-                  </span>
-                </button>
-                {reflectOpen && (
-                  <div className="mt-3 space-y-3 text-[13px] leading-relaxed anim-slide-up"
-                    style={{ color: 'var(--spa-muted)' }}
-                  >
-                    <p className="text-xs px-3 py-2 rounded-lg"
-                      style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--spa-muted)' }}
-                    >
-                      {t('ai.reflectDisclaimer')}
-                    </p>
-                    {lastReflect.basicInfoLines?.length > 0 && (
-                      <div>
-                        <div className="font-semibold mb-1.5 flex items-center gap-1.5"
-                          style={{ color: 'var(--spa-text)' }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-sage)' }} />
-                          {t('ai.reflectPoints')}
-                        </div>
-                        <ul className="space-y-1 pl-4">
-                          {lastReflect.basicInfoLines.map((b, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span style={{ color: 'var(--spa-accent)' }}>•</span>
-                              {b}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {lastReflect.lastEmotionalNote && String(lastReflect.lastEmotionalNote).trim() ? (
-                      <div>
-                        <div className="font-semibold mb-1.5 flex items-center gap-1.5"
-                          style={{ color: 'var(--spa-text)' }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--spa-rose)' }} />
-                          {t('ai.reflectSignals')}
-                        </div>
-                        <p className="whitespace-pre-wrap pl-4"
-                          style={{ background: 'rgba(255,255,255,0.4)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}
-                        >
-                          {String(lastReflect.lastEmotionalNote).trim()}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            )}
 
             <div
               ref={listRef}
               className="overflow-y-auto px-6 py-8 space-y-5"
               style={{
-                height: '58vh',
-                minHeight: 420,
+                height: 'clamp(500px, 68vh, 680px)',
                 background: 'rgba(250, 251, 252, 0.4)'
               }}
             >
@@ -327,7 +234,11 @@ const AiChat = () => {
                         className={`max-w-[72%] ${isUser ? 'msg-bubble-user' : 'msg-bubble-ai'}`}
                       >
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                          {message.kind === 'intro' ? t('ai.hello') : message.content}
+                          {message.kind === 'intro'
+                            ? t('ai.hello')
+                            : isUser
+                              ? message.content
+                              : stripAssistantBoldMarkers(message.content)}
                         </p>
                       </div>
 

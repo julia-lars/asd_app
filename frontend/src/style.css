@@ -627,6 +627,35 @@ h3 {
   transform: translateY(-1px);
 }
 
+.profile-font-size-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.profile-font-size-options button {
+  min-height: 2.45rem;
+  border: 1px solid var(--spa-line);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.56);
+  color: var(--spa-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.profile-font-size-options button:hover,
+.profile-font-size-options button.is-active {
+  background: rgba(122, 154, 184, 0.16);
+  border-color: var(--spa-accent);
+  color: var(--spa-accent-strong);
+}
+
+.profile-font-size-options button.is-active {
+  transform: translateY(-1px);
+}
+
 .profile-password-form {
   display: flex;
   flex-direction: column;

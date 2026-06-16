@@ -2,6 +2,14 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { DEFAULT_LOCALE, LANGUAGE_OPTIONS, messages } from './messages';
 
 const STORAGE_KEY = 'asd_app_locale';
+const FONT_SIZE_STORAGE_KEY = 'asd_app_font_size';
+const DEFAULT_FONT_SIZE = 'medium';
+const FONT_SIZE_OPTIONS = [
+  { code: 'small', labelKey: 'profile.fontSmall', rootFontSize: 15 },
+  { code: 'medium', labelKey: 'profile.fontMedium', rootFontSize: 16 },
+  { code: 'large', labelKey: 'profile.fontLarge', rootFontSize: 17.5 },
+  { code: 'xlarge', labelKey: 'profile.fontXLarge', rootFontSize: 19 }
+];
 const LanguageContext = createContext(null);
 
 export function normalizeLocale(value) {
@@ -40,6 +48,18 @@ function getInitialLocale() {
   return DEFAULT_LOCALE;
 }
 
+function normalizeFontSize(value) {
+  return FONT_SIZE_OPTIONS.some((option) => option.code === value) ? value : DEFAULT_FONT_SIZE;
+}
+
+function getInitialFontSize() {
+  try {
+    return normalizeFontSize(localStorage.getItem(FONT_SIZE_STORAGE_KEY));
+  } catch {
+    return DEFAULT_FONT_SIZE;
+  }
+}
+
 function readMessage(locale, key) {
   return messages[locale]?.[key] ?? messages[DEFAULT_LOCALE]?.[key] ?? key;
 }
@@ -53,9 +73,14 @@ function interpolate(template, values = {}) {
 
 export const LanguageProvider = ({ children }) => {
   const [locale, setLocaleState] = useState(getInitialLocale);
+  const [fontSize, setFontSizeState] = useState(getInitialFontSize);
 
   const setLocale = useCallback((nextLocale) => {
     setLocaleState(normalizeLocale(nextLocale));
+  }, []);
+
+  const setFontSize = useCallback((nextFontSize) => {
+    setFontSizeState(normalizeFontSize(nextFontSize));
   }, []);
 
   const t = useCallback((key, values) => interpolate(readMessage(locale, key), values), [locale]);
@@ -99,14 +124,28 @@ export const LanguageProvider = ({ children }) => {
     document.title = readMessage(locale, 'app.title');
   }, [locale]);
 
+  useEffect(() => {
+    const option = FONT_SIZE_OPTIONS.find((item) => item.code === fontSize)
+      ?? FONT_SIZE_OPTIONS.find((item) => item.code === DEFAULT_FONT_SIZE);
+    try {
+      localStorage.setItem(FONT_SIZE_STORAGE_KEY, fontSize);
+    } catch {
+      // ignore storage errors
+    }
+    document.documentElement.style.fontSize = `${option.rootFontSize}px`;
+  }, [fontSize]);
+
   const value = useMemo(() => ({
     locale,
     setLocale,
+    fontSize,
+    setFontSize,
     t,
     formatTime,
     formatDateTime,
-    languages: LANGUAGE_OPTIONS
-  }), [formatDateTime, formatTime, locale, setLocale, t]);
+    languages: LANGUAGE_OPTIONS,
+    fontSizes: FONT_SIZE_OPTIONS
+  }), [fontSize, formatDateTime, formatTime, locale, setFontSize, setLocale, t]);
 
   return React.createElement(LanguageContext.Provider, { value }, children);
 };
@@ -119,4 +158,4 @@ export const useLanguage = () => {
   return context;
 };
 
-export { DEFAULT_LOCALE, LANGUAGE_OPTIONS };
+export { DEFAULT_LOCALE, LANGUAGE_OPTIONS, FONT_SIZE_OPTIONS };

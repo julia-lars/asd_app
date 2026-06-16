@@ -7,7 +7,7 @@ import { useLanguage } from '../../i18n';
 
 const Profile = () => {
   const { user, loading, logout, changePassword } = useAuth();
-  const { t } = useLanguage();
+  const { t, fontSize, setFontSize, fontSizes } = useLanguage();
   const navigate = useNavigate();
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -153,6 +153,28 @@ const Profile = () => {
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.language')}</span>
                     </div>
                     <LanguageSwitcher align="flex-start" />
+                  </div>
+                  <div className="profile-settings-card">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-sm">🔠</span>
+                      <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.fontSize')}</span>
+                    </div>
+                    <div className="profile-font-size-options">
+                      {fontSizes.map((option) => {
+                        const active = option.code === fontSize;
+                        return (
+                          <button
+                            key={option.code}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => setFontSize(option.code)}
+                            className={active ? 'is-active' : ''}
+                          >
+                            {t(option.labelKey)}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <button
                     type="button"

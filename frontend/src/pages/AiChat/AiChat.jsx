@@ -8,6 +8,109 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const stripAssistantBoldMarkers = (value) => String(value ?? '').replace(/\*\*/g, '');
 
+const RiskNoteIcon = () => (
+  <svg
+    className="ai-risk-note-icon"
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d="M12 3.85 18.4 6.2v5.12c0 3.86-2.5 6.88-6.4 8.83-3.9-1.95-6.4-4.97-6.4-8.83V6.2L12 3.85Z"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 8.45v6.05M8.98 11.48h6.04"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const AiAvatarIcon = () => (
+  <svg
+    className="chat-avatar-icon"
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d="M7.2 6.1h9.6c1.7 0 3.05 1.32 3.05 2.94v4.62c0 1.62-1.35 2.94-3.05 2.94H7.2c-1.7 0-3.05-1.32-3.05-2.94V9.04C4.15 7.42 5.5 6.1 7.2 6.1Z"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 6.1V3.85M9.1 13.35c1.52 1.02 4.28 1.02 5.8 0"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+    />
+    <circle cx="9.15" cy="10.2" r="0.78" fill="currentColor" />
+    <circle cx="14.85" cy="10.2" r="0.78" fill="currentColor" />
+  </svg>
+);
+
+const UserAvatarIcon = () => (
+  <svg
+    className="chat-avatar-icon"
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <circle
+      cx="12"
+      cy="9.2"
+      r="3"
+      stroke="currentColor"
+      strokeWidth="1.65"
+    />
+    <path
+      d="M6.8 18.4c1.02-2.4 2.86-3.72 5.2-3.72s4.18 1.32 5.2 3.72"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const SendIcon = () => (
+  <svg
+    className="send-icon"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d="M4.55 11.82 19.4 4.86c.5-.23 1.02.26.82.78l-5.46 14.22c-.2.53-.93.56-1.17.05l-2.24-4.7-4.87-2.18c-.52-.24-.55-.97-.03-1.21Z"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinejoin="round"
+    />
+    <path
+      d="m11.35 15.2 3.02-3.08"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const AiChat = () => {
   const { user, loading } = useAuth();
   const { locale, t, formatTime } = useLanguage();
@@ -180,6 +283,11 @@ const AiChat = () => {
 
       <div className="max-w-full px-[80px] py-8">
         <div className="max-w-4xl mx-auto">
+          <div className="ai-risk-note anim-slide-up">
+            <RiskNoteIcon />
+            <span>{t('ai.riskNote')}</span>
+          </div>
+
           <div className="glass-card overflow-hidden anim-scale-in">
             <div className="px-8 py-5 flex items-center"
               style={{ borderBottom: '1px solid var(--spa-line)', background: 'rgba(255,255,255,0.5)' }}
@@ -226,7 +334,7 @@ const AiChat = () => {
                     >
                       {!isUser && (
                         <div className="avatar-circle avatar-ai">
-                          🤖
+                          <AiAvatarIcon />
                         </div>
                       )}
 
@@ -244,7 +352,7 @@ const AiChat = () => {
 
                       {isUser && (
                         <div className="avatar-circle avatar-user">
-                          😊
+                          <UserAvatarIcon />
                         </div>
                       )}
                     </div>
@@ -293,6 +401,7 @@ const AiChat = () => {
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
+                  aria-label={t('ai.send')}
                   className="flex items-center justify-center w-9 h-9 rounded-full text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: input.trim() && !sending
@@ -301,7 +410,7 @@ const AiChat = () => {
                     boxShadow: input.trim() && !sending ? '0 4px 16px rgba(122,154,184,0.3)' : 'none'
                   }}
                 >
-                  <span className="text-sm">{sending ? '…' : '✈️'}</span>
+                  {sending ? <span className="send-loading" aria-hidden="true">…</span> : <SendIcon />}
                 </button>
               </div>
             </div>

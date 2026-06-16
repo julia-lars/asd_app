@@ -8,6 +8,47 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const stripAssistantBoldMarkers = (value) => String(value ?? '').replace(/\*\*/g, '');
 
+const STARTER_DIALOGUES = [
+  {
+    role: 'user',
+    content: "My child is terrified of the dentist. Last time, he wouldn't follow any instructions from me or the dentist, and we failed. Any practical tips for next time?",
+    status: 'read'
+  },
+  {
+    role: 'assistant',
+    content: `Try making the next visit a “practice visit,” not a full treatment visit.
+1. Call ahead: ask for a quiet time slot and tell the dentist his triggers.
+2. Bring a 3-step picture plan: enter → sit → count teeth.
+3. Practice the same steps at home for 2–3 minutes, then reward.
+4. Use one instruction at a time and agree on a stop signal.
+5. Celebrate any small success; stop before panic escalates.
+
+Based on AAPD “Behavior Guidance for the Pediatric Dental Patient” and “Sensory Adapted Dental Environments to Enhance Oral Care for Children with Autism Spectrum Disorders.”`
+  },
+  {
+    role: 'user',
+    content: 'I spend pretty much all day, every day just focused on my child. I’m burned out and nothing feels worth it anymore. Any advice?',
+    status: 'read'
+  },
+  {
+    role: 'assistant',
+    content: `I’m sorry it feels this heavy. If you might hurt yourself or your child, call local emergency services or a crisis line now.
+
+A short care plan:
+1. Pick one priority today: food, sleep, safety, or school.
+2. Use a visual routine with only 3–4 steps.
+3. Ask for one concrete break: “Can you cover 20 minutes?”
+4. Tell your child’s clinician you are burned out and need support.
+
+Based on NICE “Autism spectrum disorder in under 19s: support and management.”`
+  }
+];
+
+const createStarterMessages = () => {
+  const createdAt = new Date();
+  return STARTER_DIALOGUES.map((message) => ({ ...message, fixed: true, createdAt }));
+};
+
 const RiskNoteIcon = () => (
   <svg
     className="ai-risk-note-icon"
@@ -114,9 +155,7 @@ const SendIcon = () => (
 const AiChat = () => {
   const { user, loading } = useAuth();
   const { locale, t, formatTime } = useLanguage();
-  const [messages, setMessages] = useState(() => [
-    { role: 'assistant', kind: 'intro', content: '', createdAt: new Date() }
-  ]);
+  const [messages, setMessages] = useState(createStarterMessages);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState(null);
@@ -242,7 +281,7 @@ const AiChat = () => {
         // ignore
       }
     }
-    setMessages([{ role: 'assistant', kind: 'intro', content: '', createdAt: new Date() }]);
+    setMessages(createStarterMessages());
   };
 
   if (loading) {

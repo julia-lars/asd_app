@@ -209,6 +209,39 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
   res.json({ user: { email: user.email, name: user.name, uid: user.email } });
 });
 
+app.post('/api/auth/password', authMiddleware, async (req, res) => {
+  const locale = localeFromRequest(req);
+  try {
+    const user = users[req.user.email];
+    if (!user) {
+      return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
+    }
+
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: serverMessage('auth.password_fields_required', locale) });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: serverMessage('auth.password_too_short', locale) });
+    }
+
+    const valid = await bcrypt.compare(String(currentPassword), user.password);
+    if (!valid) {
+      return res.status(400).json({ error: serverMessage('auth.current_password_wrong', locale) });
+    }
+
+    users[req.user.email] = {
+      ...user,
+      password: await bcrypt.hash(String(newPassword), 10),
+      passwordUpdatedAt: new Date().toISOString(),
+    };
+    saveUsers();
+    res.json({ ok: true, message: serverMessage('auth.password_updated', locale) });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 /* ========== Existing Routes ========== */
 
 app.get('/api/health', (_req, res) => {

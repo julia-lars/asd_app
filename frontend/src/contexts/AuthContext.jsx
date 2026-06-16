@@ -66,6 +66,23 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const value = { user, loading, login, register, logout };
+  const changePassword = async (currentPassword, newPassword, options = {}) => {
+    const locale = options.locale || localStorage.getItem(LOCALE_STORAGE_KEY) || 'zh-CN';
+    const token = localStorage.getItem('token');
+    const resp = await fetch(`${API_BASE}/api/auth/password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': locale,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.error || options.fallbackError || '修改密码失败');
+    return data;
+  };
+
+  const value = { user, loading, login, register, logout, changePassword };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

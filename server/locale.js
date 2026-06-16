@@ -73,6 +73,54 @@ const MESSAGES = {
     pt: 'O usuário não existe',
     ru: 'Пользователь не существует'
   },
+  'auth.password_fields_required': {
+    'zh-CN': '当前密码和新密码不能为空',
+    en: 'Current password and new password are required',
+    ja: '現在のパスワードと新しいパスワードは必須です',
+    ko: '현재 비밀번호와 새 비밀번호를 입력해 주세요',
+    es: 'La contraseña actual y la nueva contraseña son obligatorias',
+    fr: 'Le mot de passe actuel et le nouveau mot de passe sont obligatoires',
+    de: 'Aktuelles Passwort und neues Passwort sind erforderlich',
+    ar: 'كلمة المرور الحالية وكلمة المرور الجديدة مطلوبتان',
+    pt: 'A senha atual e a nova senha são obrigatórias',
+    ru: 'Текущий и новый пароль обязательны'
+  },
+  'auth.password_too_short': {
+    'zh-CN': '新密码至少需要 6 位',
+    en: 'The new password must be at least 6 characters',
+    ja: '新しいパスワードは6文字以上で入力してください',
+    ko: '새 비밀번호는 6자 이상이어야 합니다',
+    es: 'La nueva contraseña debe tener al menos 6 caracteres',
+    fr: 'Le nouveau mot de passe doit contenir au moins 6 caractères',
+    de: 'Das neue Passwort muss mindestens 6 Zeichen lang sein',
+    ar: 'يجب أن تتكون كلمة المرور الجديدة من 6 أحرف على الأقل',
+    pt: 'A nova senha deve ter pelo menos 6 caracteres',
+    ru: 'Новый пароль должен содержать не менее 6 символов'
+  },
+  'auth.current_password_wrong': {
+    'zh-CN': '当前密码不正确',
+    en: 'The current password is incorrect',
+    ja: '現在のパスワードが正しくありません',
+    ko: '현재 비밀번호가 올바르지 않습니다',
+    es: 'La contraseña actual es incorrecta',
+    fr: 'Le mot de passe actuel est incorrect',
+    de: 'Das aktuelle Passwort ist falsch',
+    ar: 'كلمة المرور الحالية غير صحيحة',
+    pt: 'A senha atual está incorreta',
+    ru: 'Текущий пароль неверен'
+  },
+  'auth.password_updated': {
+    'zh-CN': '密码已更新',
+    en: 'Password updated',
+    ja: 'パスワードを更新しました',
+    ko: '비밀번호가 변경되었습니다',
+    es: 'Contraseña actualizada',
+    fr: 'Mot de passe mis à jour',
+    de: 'Passwort aktualisiert',
+    ar: 'تم تحديث كلمة المرور',
+    pt: 'Senha atualizada',
+    ru: 'Пароль обновлен'
+  },
   'ai.conversation_required': {
     'zh-CN': '缺少 conversationId',
     en: 'Missing conversationId',

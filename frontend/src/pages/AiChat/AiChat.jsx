@@ -32,15 +32,14 @@ Based on AAPD “Behavior Guidance for the Pediatric Dental Patient” and “Se
   },
   {
     role: 'assistant',
-    content: `I’m sorry it feels this heavy. If you might hurt yourself or your child, call local emergency services or a crisis line now.
+    image: 'mindfulness-practice',
+    link: {
+      label: '🧘 Mindful video',
+      href: 'https://www.youtube.com/watch?v=inpok4MKVLM'
+    },
+    content: `I understand how you feel. Focusing on your child all day, every day can be deeply exhausting.
 
-A short care plan:
-1. Pick one priority today: food, sleep, safety, or school.
-2. Use a visual routine with only 3–4 steps.
-3. Ask for one concrete break: “Can you cover 20 minutes?”
-4. Tell your child’s clinician you are burned out and need support.
-
-Based on NICE “Autism spectrum disorder in under 19s: support and management.”`
+Here is a mindfulness practice video you can follow to help your mind and body settle.`
   }
 ];
 
@@ -150,6 +149,32 @@ const SendIcon = () => (
       strokeLinecap="round"
     />
   </svg>
+);
+
+const MindfulnessPracticeCard = () => (
+  <div className="mindfulness-card" aria-label="Mindfulness practice illustration">
+    <svg
+      viewBox="0 0 320 210"
+      role="img"
+      aria-labelledby="mindfulness-card-title"
+      focusable="false"
+    >
+      <title id="mindfulness-card-title">Cartoon mindfulness breathing practice</title>
+      <rect x="0" y="0" width="320" height="210" rx="24" fill="#f7efe3" />
+      <circle cx="258" cy="48" r="27" fill="#f3cf9c" opacity="0.78" />
+      <path d="M38 155c36-22 70-19 104-2 36 18 78 22 140-6" stroke="#d7b98f" strokeWidth="8" strokeLinecap="round" fill="none" opacity="0.5" />
+      <ellipse cx="160" cy="173" rx="78" ry="16" fill="#d5e4d2" />
+      <path d="M126 138c9-23 58-23 68 0 4 10-5 20-34 20s-38-10-34-20Z" fill="#88aebf" />
+      <circle cx="160" cy="83" r="25" fill="#f1c7a9" />
+      <path d="M132 80c5-25 49-28 56-1-13-7-29-9-56 1Z" fill="#5c6f80" />
+      <path d="M128 133c-24 9-38 22-44 40M192 133c24 9 38 22 44 40" stroke="#6f91a8" strokeWidth="13" strokeLinecap="round" fill="none" />
+      <path d="M143 157c-12 11-28 16-46 15M177 157c12 11 28 16 46 15" stroke="#557f74" strokeWidth="12" strokeLinecap="round" fill="none" />
+      <path d="M148 92c6 6 18 6 24 0" stroke="#7b5e54" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <path d="M86 68c14-17 34-17 48 0M186 68c14-17 34-17 48 0" stroke="#88aebf" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.9" />
+      <path d="M72 94c24-26 61-26 85 0M164 94c24-26 61-26 85 0" stroke="#a8c4d8" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.65" />
+      <path d="M62 44c-8-14 4-28 20-22 4 16-6 27-20 22ZM261 133c-14-8-11-26 6-30 13 11 9 27-6 30Z" fill="#9dbb95" />
+    </svg>
+  </div>
 );
 
 const AiChat = () => {
@@ -320,8 +345,8 @@ const AiChat = () => {
         </div>
       </nav>
 
-      <div className="max-w-full px-[80px] py-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="ai-chat-page max-w-full px-[80px] py-8">
+        <div className="ai-chat-container max-w-5xl mx-auto">
           <div className="ai-risk-note anim-slide-up">
             <RiskNoteIcon />
             <span>{t('ai.riskNote')}</span>
@@ -378,7 +403,7 @@ const AiChat = () => {
                       )}
 
                       <div
-                        className={`max-w-[72%] ${isUser ? 'msg-bubble-user' : 'msg-bubble-ai'}`}
+                        className={`max-w-[78%] ${isUser ? 'msg-bubble-user' : 'msg-bubble-ai'}`}
                       >
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                           {message.kind === 'intro'
@@ -387,6 +412,17 @@ const AiChat = () => {
                               ? message.content
                               : stripAssistantBoldMarkers(message.content)}
                         </p>
+                        {message.link && (
+                          <a
+                            className="ai-resource-link"
+                            href={message.link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {message.link.label}
+                          </a>
+                        )}
+                        {message.image === 'mindfulness-practice' && <MindfulnessPracticeCard />}
                       </div>
 
                       {isUser && (

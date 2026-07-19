@@ -21,6 +21,11 @@ const KnowledgeGraphPage = () => {
   const searchDebounce = useRef(0);
 
   useEffect(() => {
+    document.body.classList.add('kg-fullscreen');
+    return () => document.body.classList.remove('kg-fullscreen');
+  }, []);
+
+  useEffect(() => {
     if (authLoading) return;
     if (!user) {
       navigate('/login', { replace: true });
@@ -231,7 +236,7 @@ const KnowledgeGraphPage = () => {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden"
+    <div className="kg-page h-[100dvh] flex flex-col overflow-hidden"
       style={{ background: 'rgba(250, 248, 245, 0.8)', color: 'var(--spa-text)' }}
     >
       <header className="shrink-0 flex items-center gap-2 px-3 py-2.5"
@@ -252,7 +257,7 @@ const KnowledgeGraphPage = () => {
           {t('common.back')}
         </button>
         <h1 className="text-sm font-semibold truncate"
-          style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif', maxWidth: '8rem' }}
+          style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif', maxWidth: 'min(42vw, 32rem)' }}
         >
           {title}
         </h1>

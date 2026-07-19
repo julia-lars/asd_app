@@ -101,6 +101,27 @@ body {
   }
 }
 
+body.kg-fullscreen {
+  overflow: hidden;
+}
+
+body.kg-fullscreen #root {
+  display: block;
+}
+
+body.kg-fullscreen .app-viewport {
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+}
+
 body::before {
   content: "";
   position: fixed;

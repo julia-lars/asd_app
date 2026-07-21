@@ -32,6 +32,11 @@ function typeTagColor(typeTag) {
   return palette[(h >>> 0) % palette.length];
 }
 
+/** 去除属性名中的 BOM 字符 (﻿) */
+function cleanAttrName(name) {
+  return String(name).replace(/^﻿/, '').trim();
+}
+
 /**
  * @param {unknown} cxArray
  * @returns {{ elements: object[], networkName: string, nodeCount: number, edgeCount: number }}
@@ -66,8 +71,24 @@ export function convertCxFileToKgGraph(cxArray) {
       if (id == null) continue;
       if (!nodeMeta.has(id)) nodeMeta.set(id, {});
       const m = nodeMeta.get(id);
-      if (row.n === 'subject_type_abbr') m.subject = String(row.v ?? '');
-      if (row.n === 'object_type_abbr') m.object = String(row.v ?? '');
+      const name = cleanAttrName(row.n);
+      if (name === 'subject_type_abbr') m.subject = String(row.v ?? '');
+      if (name === 'object_type_abbr') m.object = String(row.v ?? '');
+    }
+  }
+
+  /** @type {Map<number, { pmid?: string, fullName?: string }>} */
+  const edgeMeta = new Map();
+  const edgeAttrAsp = cxArray.find((o) => o && o.edgeAttributes);
+  if (Array.isArray(edgeAttrAsp?.edgeAttributes)) {
+    for (const row of edgeAttrAsp.edgeAttributes) {
+      const id = row.po;
+      if (id == null) continue;
+      if (!edgeMeta.has(id)) edgeMeta.set(id, {});
+      const m = edgeMeta.get(id);
+      const name = cleanAttrName(row.n);
+      if (name === 'name') m.fullName = String(row.v ?? '');
+      if (name === 'pmid') m.pmid = String(row.v ?? '');
     }
   }
 
@@ -88,7 +109,7 @@ export function convertCxFileToKgGraph(cxArray) {
     if (rawId == null) continue;
     const pos = positions.get(rawId) ?? { x: (Math.random() - 0.5) * 400, y: (Math.random() - 0.5) * 400 };
     const meta = nodeMeta.get(rawId) ?? {};
-    const typeTag = (meta.subject || meta.object || 'other').split(/[;,]/)[0].trim() || 'other';
+    const typeTag = (meta.subject || meta.object || (n.n ? String(n.n).substring(0, 4) : 'other')).split(/[;,]/)[0].trim() || 'other';
     const color = typeTagColor(typeTag);
 
     elements.push({
@@ -111,14 +132,18 @@ export function convertCxFileToKgGraph(cxArray) {
       const sid = `n${e.s}`;
       const tid = `n${e.t}`;
       if (!nodeIds.has(sid) || !nodeIds.has(tid)) continue;
+      const em = edgeMeta.get(e['@id']) ?? {};
+      const edgeData = {
+        id: `e${e['@id']}`,
+        source: sid,
+        target: tid,
+        label: e.i != null ? String(e.i) : '',
+      };
+      if (em.fullName) edgeData.fullName = em.fullName;
+      if (em.pmid) edgeData.pmid = em.pmid;
       elements.push({
         group: 'edges',
-        data: {
-          id: `e${e['@id']}`,
-          source: sid,
-          target: tid,
-          label: e.i != null ? String(e.i) : '',
-        },
+        data: edgeData,
       });
       edgeCount += 1;
     }

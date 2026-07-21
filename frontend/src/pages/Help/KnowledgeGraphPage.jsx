@@ -148,7 +148,15 @@ const KnowledgeGraphPage = () => {
         const src = e.source().data('label');
         const tgt = e.target().data('label');
         const rel = e.data('label') || t('kg.defaultRelation');
-        setStatus(t('kg.edgeStatus', { source: src, relation: rel, target: tgt }));
+        const pmid = e.data('pmid');
+        const fullName = e.data('fullName');
+        if (pmid) {
+          setStatus(t('kg.edgeStatusWithSource', { source: src, relation: rel, target: tgt, pmid }));
+        } else if (fullName) {
+          setStatus(t('kg.edgeStatusFull', { source: src, relation: rel, target: tgt, fullName }));
+        } else {
+          setStatus(t('kg.edgeStatus', { source: src, relation: rel, target: tgt }));
+        }
       });
 
       cy.on('tap', (evt) => {

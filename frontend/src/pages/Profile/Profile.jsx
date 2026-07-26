@@ -124,7 +124,7 @@ const Profile = () => {
 
             <div className="profile-card-stack">
               <div className="profile-section anim-slide-up" style={{ animationDelay: '0ms' }}>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-5">
                   <IconProfile style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.profile')}</h3>
                 </div>
@@ -153,7 +153,7 @@ const Profile = () => {
               </div>
 
               <div className="profile-section anim-slide-up" style={{ animationDelay: '60ms' }}>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-5">
                   <IconSettings style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.settings')}</h3>
                 </div>

@@ -67,7 +67,8 @@ const Social = () => {
       setLoading(false);
     });
     return unsub;
-  }, [authLoading, user, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.uid, navigate]);
 
   /* ---- 加载更多 ---- */
   const loadMore = useCallback(async () => {

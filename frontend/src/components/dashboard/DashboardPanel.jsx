@@ -142,7 +142,7 @@ const DashboardPanel = () => {
   return (
     <div style={{ marginBottom: '1rem' }}>
       {/* 标题行 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1rem' }}>
         <span style={{ fontSize: '0.85rem' }}><IconDashboard style={{verticalAlign:'middle',color:'var(--spa-accent)'}} /></span>
         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--spa-text)' }}>
           {t('dashboard.title')}

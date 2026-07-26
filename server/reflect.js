@@ -47,7 +47,7 @@ export async function runReflect(client, { userText, assistantText, previousMemo
   }
 
   const reflectModel =
-    process.env.DEEPSEEK_REFLECT_MODEL ?? process.env.DEEPSEEK_MODEL ?? 'deepseek-chat';
+    process.env.DEEPSEEK_REFLECT_MODEL ?? process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-pro';
 
   const result = await client.callTool({
     name: 'chat_completion',

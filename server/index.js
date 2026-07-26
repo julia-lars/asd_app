@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Stripe from 'stripe';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -29,6 +30,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT ?? 3001);
+
+/* ========== Stripe ========== */
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const STRIPE_PRICE_ID_MID = process.env.STRIPE_PRICE_ID_MID;       // 中级 ¥19/月
+const STRIPE_PRICE_ID_PREMIUM = process.env.STRIPE_PRICE_ID_PREMIUM; // 高级 ¥39/月
+let stripe = null;
+function getStripe() {
+  if (!STRIPE_SECRET_KEY) return null;
+  if (!stripe) stripe = new Stripe(STRIPE_SECRET_KEY);
+  return stripe;
+}
+
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 /** `stdio`：本地子进程 deepseek-mcp-server（需 DEEPSEEK_API_KEY）。`http`：远程 Streamable HTTP MCP（需 DEEPSEEK_MCP_AUTH_TOKEN）。 */
 const MCP_TRANSPORT = (process.env.MCP_TRANSPORT ?? 'stdio').toLowerCase();
@@ -168,11 +182,12 @@ app.post('/api/auth/register', async (req, res) => {
       name: name || email.split('@')[0],
       password: hashedPassword,
       role: 'family',
+      tier: 'free',
       createdAt: new Date().toISOString(),
     };
     saveUsers();
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { email, name: name || email.split('@')[0], uid: email } });
+    res.json({ token, user: { email, name: name || email.split('@')[0], uid: email, tier: 'free' } });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -194,7 +209,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: serverMessage('auth.invalid_credentials', locale) });
     }
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { email, name: user.name, uid: email } });
+    res.json({ token, user: { email, name: user.name, uid: email, tier: user.tier || 'free' } });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -206,7 +221,7 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
   if (!user) {
     return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
-  res.json({ user: { email: user.email, name: user.name, uid: user.email } });
+  res.json({ user: { email: user.email, name: user.name, uid: user.email, tier: user.tier || 'free' } });
 });
 
 app.post('/api/auth/password', authMiddleware, async (req, res) => {
@@ -351,7 +366,7 @@ app.post('/api/ai/chat', async (req, res) => {
         name: 'chat_completion',
         arguments: {
           messages,
-          model: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
+          model: process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-pro',
           temperature: 0.7,
           max_tokens: Number.isFinite(CHAT_MAX_TOKENS) && CHAT_MAX_TOKENS > 0 ? CHAT_MAX_TOKENS : 700,
         },
@@ -426,6 +441,144 @@ app.post('/api/ai/session/reset', async (req, res) => {
     console.error('[server] POST /api/ai/session/reset', err);
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+/* ========== 订阅 & 支付 ========== */
+
+/** 获取当前用户订阅状态 */
+app.get('/api/user/subscription', authMiddleware, (req, res) => {
+  const locale = localeFromRequest(req);
+  const user = users[req.user.email];
+  if (!user) {
+    return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
+  }
+  res.json({
+    tier: user.tier || 'free',
+    subscriptionExpiry: user.subscriptionExpiry || null,
+    subscriptionId: user.subscriptionId || null,
+  });
+});
+
+/** 临时：删除所有帖子 */
+app.post('/api/admin/clear-posts', authMiddleware, async (_req, res) => {
+  try {
+    const admin = await import('firebase-admin');
+    if (!admin.default.apps.length) {
+      admin.default.initializeApp({ projectId: 'asd-app-4e926' });
+    }
+    const db = admin.default.firestore();
+    const snap = await db.collection('posts').get();
+    if (snap.empty) return res.json({ ok: true, deleted: 0 });
+    const batch = db.batch();
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    res.json({ ok: true, deleted: snap.docs.length });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+/** 直接升级用户层级（开发阶段，暂不接入支付） */
+app.post('/api/user/upgrade', authMiddleware, (req, res) => {
+  const locale = localeFromRequest(req);
+  const { tier } = req.body ?? {};
+  if (!tier || !['free', 'mid', 'premium'].includes(tier)) {
+    return res.status(400).json({ error: '无效的层级' });
+  }
+  const user = users[req.user.email];
+  if (!user) {
+    return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
+  }
+  user.tier = tier;
+  saveUsers();
+  console.log(`[server] 用户 ${req.user.email} 升级至 ${tier}`);
+  res.json({ ok: true, tier });
+});
+
+/** 创建 Stripe Checkout Session */
+app.post('/api/payment/create-checkout', authMiddleware, async (req, res) => {
+  const locale = localeFromRequest(req);
+  try {
+    const { tier } = req.body ?? {};
+    if (!tier || !['mid', 'premium'].includes(tier)) {
+      return res.status(400).json({ error: '无效的订阅层级' });
+    }
+
+    const s = getStripe();
+    if (!s) {
+      return res.status(500).json({ error: '支付服务暂未配置' });
+    }
+
+    const priceId = tier === 'premium' ? STRIPE_PRICE_ID_PREMIUM : STRIPE_PRICE_ID_MID;
+    if (!priceId) {
+      return res.status(500).json({ error: `未配置 ${tier} 层级的价格 ID` });
+    }
+
+    const user = users[req.user.email];
+    const session = await s.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['alipay', 'wechat_pay', 'card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${req.headers.origin || 'http://localhost:5173'}/upgrade/success?tier=${tier}`,
+      cancel_url: `${req.headers.origin || 'http://localhost:5173'}/profile`,
+      client_reference_id: req.user.email,
+      customer_email: req.user.email,
+      metadata: { tier, userEmail: req.user.email },
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[server] create-checkout error:', err);
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+/** Stripe Webhook 接收端 */
+app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const s = getStripe();
+  if (!s || !STRIPE_WEBHOOK_SECRET) {
+    res.status(500).json({ error: 'Webhook 未配置' });
+    return;
+  }
+
+  let event;
+  try {
+    event = s.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('[server] webhook signature verification failed:', err.message);
+    res.status(400).json({ error: '签名验证失败' });
+    return;
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userEmail = session.client_reference_id || session.metadata?.userEmail;
+    const tier = session.metadata?.tier || 'mid';
+
+    if (userEmail && users[userEmail]) {
+      users[userEmail].tier = tier;
+      users[userEmail].subscriptionId = session.subscription;
+      users[userEmail].subscriptionExpiry = null; // Stripe 管理续费
+      saveUsers();
+      console.log(`[server] 用户 ${userEmail} 升级至 ${tier}`);
+    }
+  }
+
+  // 处理订阅取消/过期
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const userEmail = subscription.metadata?.userEmail;
+    if (userEmail && users[userEmail]) {
+      users[userEmail].tier = 'free';
+      users[userEmail].subscriptionId = null;
+      users[userEmail].subscriptionExpiry = null;
+      saveUsers();
+      console.log(`[server] 用户 ${userEmail} 订阅已取消，降级至 free`);
+    }
+  }
+
+  res.json({ received: true });
 });
 
 app.listen(PORT, () => {

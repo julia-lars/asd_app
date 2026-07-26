@@ -3,6 +3,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import DashboardPanel from '../../components/dashboard/DashboardPanel';
+import UpgradeBanner from '../../components/upgrade/UpgradeBanner';
+import UpgradePanel from '../../components/upgrade/UpgradePanel';
+import { IconProfile, IconSettings, IconFontSize, IconPassword, IconPhone, IconGlobe } from '../../components/common/Icons';
 import { useLanguage } from '../../i18n';
 
 const Profile = () => {
@@ -18,6 +22,7 @@ const Profile = () => {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [upgradePanelOpen, setUpgradePanelOpen] = useState(false);
 
   if (loading) {
     return (
@@ -120,9 +125,15 @@ const Profile = () => {
             <div className="profile-card-stack">
               <div className="profile-section anim-slide-up" style={{ animationDelay: '0ms' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-base">📋</span>
+                  <IconProfile style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.profile')}</h3>
                 </div>
+                {/* 结果追踪仪表板 */}
+                <DashboardPanel />
+
+                {/* 升级入口 */}
+                <UpgradeBanner onOpenPanel={() => setUpgradePanelOpen(true)} />
+
                 <div className="profile-field-list">
                   <div className="profile-info-row">
                     <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
@@ -143,20 +154,20 @@ const Profile = () => {
 
               <div className="profile-section anim-slide-up" style={{ animationDelay: '60ms' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-base">⚙️</span>
+                  <IconSettings style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.settings')}</h3>
                 </div>
                 <div className="profile-field-list">
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-sm">🌐</span>
+                      <IconSettings style={{verticalAlign:'middle'}} />
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.language')}</span>
                     </div>
                     <LanguageSwitcher align="flex-start" />
                   </div>
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-sm">🔠</span>
+                      <IconFontSize style={{verticalAlign:'middle'}} />
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.fontSize')}</span>
                     </div>
                     <div className="profile-font-size-options">
@@ -184,7 +195,7 @@ const Profile = () => {
                     }}
                     className="profile-action-row"
                   >
-                    <span className="text-sm">🔑</span>
+                    <IconPassword style={{verticalAlign:'middle'}} />
                     <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.resetPwd')}</span>
                     {passwordOpen && (
                       <span className="ml-auto text-xs" style={{ color: 'var(--spa-accent-strong)' }}>
@@ -245,7 +256,7 @@ const Profile = () => {
                     </form>
                   )}
                   <div className="profile-action-row">
-                    <span className="text-sm">📱</span>
+                    <IconPhone style={{verticalAlign:'middle'}} />
                     <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.bindPhone')}</span>
                   </div>
                 </div>
@@ -261,6 +272,7 @@ const Profile = () => {
         </div>
       </div>
 
+      <UpgradePanel open={upgradePanelOpen} onClose={() => setUpgradePanelOpen(false)} />
       <BottomNav />
     </div>
   );

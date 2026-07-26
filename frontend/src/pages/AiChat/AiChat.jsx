@@ -8,45 +8,6 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const stripAssistantBoldMarkers = (value) => String(value ?? '').replace(/\*\*/g, '');
 
-const STARTER_DIALOGUES = [
-  {
-    role: 'user',
-    content: "My child is terrified of the dentist. Last time, he wouldn't follow any instructions from me or the dentist, and we failed. Any practical tips for next time?",
-    status: 'read'
-  },
-  {
-    role: 'assistant',
-    content: `Try making the next visit a “practice visit,” not a full treatment visit.
-1. Call ahead: ask for a quiet time slot and tell the dentist his triggers.
-2. Bring a 3-step picture plan: enter → sit → count teeth.
-3. Practice the same steps at home for 2–3 minutes, then reward.
-4. Use one instruction at a time and agree on a stop signal.
-5. Celebrate any small success; stop before panic escalates.
-
-Based on AAPD “Behavior Guidance for the Pediatric Dental Patient” and “Sensory Adapted Dental Environments to Enhance Oral Care for Children with Autism Spectrum Disorders.”`
-  },
-  {
-    role: 'user',
-    content: 'I spend pretty much all day, every day just focused on my child. I’m burned out and nothing feels worth it anymore. Any advice?',
-    status: 'read'
-  },
-  {
-    role: 'assistant',
-    image: 'mindfulness-practice',
-    link: {
-      label: '🧘 Mindful video',
-      href: 'https://www.youtube.com/watch?v=inpok4MKVLM'
-    },
-    content: `I understand how you feel. Focusing on your child all day, every day can be deeply exhausting.
-
-Here is a mindfulness practice video you can follow to help your mind and body settle.`
-  }
-];
-
-const createStarterMessages = () => {
-  const createdAt = new Date();
-  return STARTER_DIALOGUES.map((message) => ({ ...message, fixed: true, createdAt }));
-};
 
 const RiskNoteIcon = () => (
   <svg
@@ -180,7 +141,7 @@ const MindfulnessPracticeCard = () => (
 const AiChat = () => {
   const { user, loading } = useAuth();
   const { locale, t, formatTime } = useLanguage();
-  const [messages, setMessages] = useState(createStarterMessages);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState(null);
@@ -382,6 +343,15 @@ const AiChat = () => {
                 background: 'rgba(250, 251, 252, 0.4)'
               }}
             >
+              {messages.length === 0 && (
+                <div className="flex items-center justify-center" style={{ minHeight: '300px' }}>
+                  <div className="glass-card text-center" style={{ maxWidth: '420px', padding: '2rem 2.5rem', lineHeight: 1.8 }}>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--spa-text)', fontWeight: 500 }}>
+                      {t('ai.welcome')}
+                    </p>
+                  </div>
+                </div>
+              )}
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
                 const timeLabel = formatTime(message.createdAt);

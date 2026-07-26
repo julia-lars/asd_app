@@ -7,7 +7,10 @@ import Register from './pages/Auth/Register';
 import Social from './pages/Social/Social';
 import AiChat from './pages/AiChat/AiChat';
 import Help from './pages/Help/Help';
+import GroupCounseling from './pages/Help/GroupCounseling';
+import ExpertConsultation from './pages/Help/ExpertConsultation';
 import Profile from './pages/Profile/Profile';
+import UpgradeSuccess from './components/upgrade/UpgradeSuccess';
 
 const KnowledgeGraphPage = lazy(() => import('./pages/Help/KnowledgeGraphPage'));
 
@@ -33,7 +36,10 @@ function App() {
               <Route path="/ai-chat" element={<AiChat />} />
               <Route path="/help" element={<Help />} />
               <Route path="/help/knowledge-graph" element={<KnowledgeGraphPage />} />
+              <Route path="/help/group-counseling" element={<GroupCounseling />} />
+              <Route path="/help/expert-consultation" element={<ExpertConsultation />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/upgrade/success" element={<UpgradeSuccess />} />
               <Route path="/" element={<Navigate to="/ai-chat" replace />} />
             </Routes>
           </Suspense>

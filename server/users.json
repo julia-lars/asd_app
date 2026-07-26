@@ -4,6 +4,7 @@
     "name": "测试用户",
     "password": "$2b$10$1HRULeN1ud.3.j4K7ccj6OWAt9yS9eRa0w40OmnUDSIHR3YDn86HG",
     "role": "family",
+    "tier": "free",
     "createdAt": "2026-04-28T06:54:20.514Z"
   },
   "123@qq.com": {
@@ -11,6 +12,7 @@
     "name": "liya",
     "password": "$2b$10$9m8O.liWPM//GE.9HUKHpOfuGM3rIKKhEwJLhtYE/HsgivdyiqwDi",
     "role": "family",
+    "tier": "mid",
     "createdAt": "2026-05-29T11:27:17.443Z"
   }
 }

@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './i18n';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import Welcome from './pages/Auth/Welcome';
 import Social from './pages/Social/Social';
 import AiChat from './pages/AiChat/AiChat';
 import Help from './pages/Help/Help';
@@ -30,6 +31,7 @@ function App() {
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <Routes>
+              <Route path="/welcome" element={<Welcome />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/social" element={<Social />} />
@@ -40,7 +42,7 @@ function App() {
               <Route path="/help/expert-consultation" element={<ExpertConsultation />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/upgrade/success" element={<UpgradeSuccess />} />
-              <Route path="/" element={<Navigate to="/ai-chat" replace />} />
+              <Route path="/" element={<Navigate to="/welcome" replace />} />
             </Routes>
           </Suspense>
         </AuthProvider>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n';
 
@@ -15,7 +14,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     try {
       await login(email, password, { locale, fallbackError: t('auth.error.loginFailed') });
       navigate('/ai-chat');
@@ -24,68 +22,60 @@ const Login = () => {
     }
   };
 
-  return (
-    <div className="auth-bg-overlay">
-      <div className="glass-card-strong p-8 w-96 anim-scale-in" style={{ maxWidth: 'min(24rem, calc(100vw - 2rem))' }}>
-        <div className="mb-5">
-          <LanguageSwitcher />
-        </div>
+  const inputStyle = {
+    width: '100%',
+    padding: '0.7rem 0.9rem',
+    fontSize: '0.9rem',
+    border: '1px solid var(--spa-line)',
+    borderRadius: '10px',
+    background: 'rgba(255,255,255,0.7)',
+    color: 'var(--spa-text)',
+    outline: 'none',
+    transition: 'border-color 160ms ease',
+  };
 
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-3">🌈</div>
-          <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
+  return (
+    <div className="auth-bg-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+      <div className="glass-card-strong anim-scale-in" style={{ padding: '2.5rem 2rem', maxWidth: 'min(22rem, calc(100vw - 2rem))', width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <img src="/logo.jpg" alt="logo" style={{ width: 128, height: 128, margin: '0 auto 0.8rem', objectFit: 'contain' }} />
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--spa-text)', marginBottom: '0.2rem', fontFamily: '"Cormorant Garamond", "Noto Serif SC", serif' }}>
             {t('auth.login.title')}
           </h2>
-          <p className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('auth.login.subtitle')}</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--spa-muted)' }}>{t('auth.login.subtitle')}</p>
         </div>
 
         {error && (
-          <div className="mb-5 text-center text-sm py-2.5 px-4 rounded-xl"
-            style={{ background: 'var(--spa-danger-soft)', color: 'var(--spa-danger)' }}>
+          <div style={{ marginBottom: '1rem', textAlign: 'center', fontSize: '0.82rem', padding: '0.6rem 1rem', borderRadius: '10px', background: 'var(--spa-danger-soft)', color: 'var(--spa-danger)' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: 'var(--spa-muted)', marginBottom: '0.35rem' }}>
               {t('auth.email')}
             </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="spa-input"
-              required
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              style={inputStyle} required placeholder="email@example.com" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--spa-muted)' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: 'var(--spa-muted)', marginBottom: '0.35rem' }}>
               {t('auth.password')}
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="spa-input"
-              required
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              style={inputStyle} required />
           </div>
-          <button
-            type="submit"
-            className="btn-primary w-full mt-2"
-          >
+          <button type="submit" className="btn-primary" style={{ marginTop: '0.3rem', width: '100%', padding: '0.7rem', fontSize: '0.9rem' }}>
             {t('auth.login.submit')}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm" style={{ color: 'var(--spa-muted)' }}>
-          <p>
-            {t('auth.login.noAccount')}{' '}
-            <Link to="/register" className="font-semibold" style={{ color: 'var(--spa-accent-strong)' }}>
-              {t('auth.register.submit')}
-            </Link>
-          </p>
+        <div style={{ marginTop: '1.2rem', textAlign: 'center', fontSize: '0.82rem', color: 'var(--spa-muted)' }}>
+          {t('auth.login.noAccount')}{' '}
+          <Link to="/register" style={{ fontWeight: 600, color: 'var(--spa-accent-strong)', textDecoration: 'none' }}>
+            {t('auth.register.submit')}
+          </Link>
         </div>
       </div>
     </div>

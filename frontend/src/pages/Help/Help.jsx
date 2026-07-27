@@ -3,18 +3,22 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/common/BottomNav';
 import { useLanguage } from '../../i18n';
-import { IconKnowledge, IconToolbox, IconResources, IconContact, IconGroup, IconExpert, IconSearch, IconAudio, IconVideo, IconChevronDown, IconExternal, IconLock } from '../../components/common/Icons';
+import { IconKnowledge, IconToolbox, IconResources, IconContact, IconGroup, IconExpert, IconSearch, IconAudio, IconChevronDown, IconExternal, IconLock } from '../../components/common/Icons';
 
 const SESSION_LIMITS = {
   group:  { free: 0, mid: 4, premium: 8 },
   expert: { free: 0, mid: 0, premium: 2 },
 };
 
-const TOOLBOX_LINKS = {
-  audio: 'https://www.ximalaya.com/search/%E5%86%A5%E6%83%B3%E6%94%BE%E6%9D%BE',
-  video: 'https://www.bilibili.com/search?keyword=%E5%91%BC%E5%90%B8%E6%94%BE%E6%9D%BE%E7%BB%83%E4%B9%A0',
-};
-
+const AUDIO_TRACKS = [
+  { id: 1, labelKey: 'toolbox.track01', src: '/audio/01.mp3' },
+  { id: 2, labelKey: 'toolbox.track02', src: '/audio/02.mp3' },
+  { id: 3, labelKey: 'toolbox.track03', src: '/audio/03.mp3' },
+  { id: 4, labelKey: 'toolbox.track04', src: '/audio/04.mp3' },
+  { id: 5, labelKey: 'toolbox.track05', src: '/audio/05.mp3' },
+  { id: 6, labelKey: 'toolbox.track06', src: '/audio/06.mp3' },
+  { id: 7, labelKey: 'toolbox.track07', src: '/audio/07.mp3' },
+];
 const Help = () => {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
@@ -153,9 +157,13 @@ const Help = () => {
                   }}
                 >
                   <IconToolbox style={{color:'var(--spa-accent)'}} />
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--spa-text)', margin: 0, flex: 1 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--spa-text)', margin: 0 }}>
                     {t('help.toolbox')}
                   </h3>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--spa-muted)', fontWeight: 500 }}>
+                    {t('help.toolboxLabel')}
+                  </span>
+                  <span style={{ flex: 1 }} />
                   <span style={{
                     fontSize: '0.8rem', color: 'var(--spa-muted)',
                     transform: toolboxOpen ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -167,34 +175,25 @@ const Help = () => {
 
                 {toolboxOpen && (
                   <div style={{ paddingLeft: '1.25rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {[{ key: 'audio', icon: <IconAudio style={{color:'var(--spa-accent)',flexShrink:0}} />, labelKey: 'help.toolboxAudio', url: TOOLBOX_LINKS.audio },
-                      { key: 'video', icon: <IconVideo style={{color:'var(--spa-accent)',flexShrink:0}} />, labelKey: 'help.toolboxVideo', url: TOOLBOX_LINKS.video }]
-                      .map((item) => (
-                        <a
-                          key={item.key}
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '0.75rem',
-                            padding: '0.7rem 0.9rem', borderRadius: '12px',
-                            border: '1px solid var(--spa-line)',
-                            background: 'rgba(255,255,255,0.7)',
-                            cursor: 'pointer', textDecoration: 'none',
-                            transition: 'all 160ms ease',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(28,44,62,0.06)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-                        >
-                          {item.icon}
-                          <span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--spa-text)', flex: 1 }}>
-                            {t(item.labelKey)}
-                          </span>
-                          <span style={{ fontSize: '0.68rem', color: 'var(--spa-muted)' }}>
-                            {t('help.toolboxOpen')} <IconExternal style={{verticalAlign:'middle'}} />
-                          </span>
-                        </a>
-                      ))}
+                    {AUDIO_TRACKS.map((track) => (
+                      <div
+                        key={track.id}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.6rem',
+                          padding: '0.55rem 0.8rem', borderRadius: '12px',
+                          border: '1px solid var(--spa-line)',
+                          background: 'rgba(255,255,255,0.7)',
+                        }}
+                      >
+                        <IconAudio style={{color:'var(--spa-accent)',flexShrink:0}} />
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--spa-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {t(track.labelKey)}
+                        </span>
+                        <audio controls preload="none" style={{ flex: 1, height: 28, minWidth: 0 }}>
+                          <source src={track.src} type="audio/mpeg" />
+                        </audio>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -211,7 +210,7 @@ const Help = () => {
                     background: resourcesOpen
                       ? 'rgba(37,99,235,0.06)'
                       : 'rgba(255,255,255,0.5)',
-                    borderLeft: '3px solid var(--spa-accent)',
+                    borderLeft: resourcesOpen ? '3px solid var(--spa-accent)' : '3px solid transparent',
                     transition: 'all 200ms ease',
                   }}
                 >

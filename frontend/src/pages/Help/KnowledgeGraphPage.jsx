@@ -16,6 +16,7 @@ const KnowledgeGraphPage = () => {
   const [error, setError] = useState(null);
   const [title, setTitle] = useState(() => t('kg.title'));
   const [status, setStatus] = useState(() => t('kg.statusDefault'));
+  const [edgeLink, setEdgeLink] = useState(null);
   const [search, setSearch] = useState('');
   const [debugCount, setDebugCount] = useState(null);
   const searchDebounce = useRef(0);
@@ -150,18 +151,21 @@ const KnowledgeGraphPage = () => {
         const rel = e.data('label') || t('kg.defaultRelation');
         const pmid = e.data('pmid');
         const fullName = e.data('fullName');
-        if (pmid) {
-          setStatus(t('kg.edgeStatusWithSource', { source: src, relation: rel, target: tgt, pmid }));
-        } else if (fullName) {
+        if (fullName) {
           setStatus(t('kg.edgeStatusFull', { source: src, relation: rel, target: tgt, fullName }));
-        } else {
-          setStatus(t('kg.edgeStatus', { source: src, relation: rel, target: tgt }));
         }
+        if (pmid) {
+          setEdgeLink({ pmid, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` });
+        } else {
+          setEdgeLink(null);
+        }
+        setStatus(t('kg.edgeStatus', { source: src, relation: rel, target: tgt }));
       });
 
       cy.on('tap', (evt) => {
         if (evt.target === cy) {
           setStatus(t('kg.statusDefault'));
+          setEdgeLink(null);
         }
       });
 
@@ -346,6 +350,17 @@ const KnowledgeGraphPage = () => {
         }}
       >
         <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--spa-text)' }}>{status}</p>
+        {edgeLink && (
+          <a
+            href={edgeLink.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 text-[11px] font-medium inline-flex items-center gap-1"
+            style={{ color: 'var(--spa-accent-strong)', textDecoration: 'underline' }}
+          >
+            📄 PubMed: {edgeLink.pmid} →
+          </a>
+        )}
         <p className="mt-0.5 text-[10px]" style={{ color: 'var(--spa-muted)' }}>
           {t('kg.invisibleHint')}
         </p>

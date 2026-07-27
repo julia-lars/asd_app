@@ -14,10 +14,31 @@ export function ensureFirebase() {
     return true;
   }
 
-  try {
-    const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-    if (saPath) {
-      // Render 的 Secret File 默认挂载在 /etc/secrets/ 下
+  console.log('[firebase] 开始初始化...');
+  console.log('[firebase] GOOGLE_APPLICATION_CREDENTIALS_JSON 存在:', !!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+  console.log('[firebase] FIREBASE_SERVICE_ACCOUNT_PATH 存在:', !!process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
+
+  // 方式 1：环境变量 GOOGLE_APPLICATION_CREDENTIALS_JSON
+  const jsonEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (jsonEnv) {
+    try {
+      const sa = JSON.parse(jsonEnv);
+      admin.initializeApp({
+        credential: admin.credential.cert(sa),
+        projectId: sa.project_id || 'asd-app-4e926',
+      });
+      initialized = true;
+      console.log('[firebase] Admin SDK 已初始化（环境变量 JSON）project:', sa.project_id);
+      return true;
+    } catch (err) {
+      console.warn('[firebase] 环境变量 JSON 解析失败:', err.message);
+    }
+  }
+
+  // 方式 2：文件路径
+  const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (saPath) {
+    try {
       const candidates = [
         saPath,
         path.join('/etc/secrets', saPath),
@@ -25,33 +46,34 @@ export function ensureFirebase() {
       ];
       let raw = null;
       for (const p of candidates) {
-        try { raw = readFileSync(p, 'utf8'); console.log('[firebase] 从', p, '读取密钥'); break; }
-        catch {}
+        try { raw = readFileSync(p, 'utf8'); break; } catch {}
       }
-      if (!raw) throw new Error('无法读取密钥文件，尝试了: ' + candidates.join(', '));
-      const sa = JSON.parse(raw);
-      admin.initializeApp({
-        credential: admin.credential.cert(sa),
-        projectId: sa.project_id,
-      });
-      initialized = true;
-      console.log('[firebase] Admin SDK 已初始化（service account）project:', sa.project_id);
-      return true;
+      if (raw) {
+        const sa = JSON.parse(raw);
+        admin.initializeApp({
+          credential: admin.credential.cert(sa),
+          projectId: sa.project_id || 'asd-app-4e926',
+        });
+        initialized = true;
+        console.log('[firebase] Admin SDK 已初始化（文件）');
+        return true;
+      }
+    } catch (err) {
+      console.warn('[firebase] 文件读取失败:', err.message);
     }
-  } catch (err) {
-    console.warn('[firebase] service account 初始化失败:', err.message);
   }
 
+  // 方式 3：ADC（需要 GOOGLE_CLOUD_PROJECT）
   try {
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
-      projectId: 'asd-app-4e926',
+      projectId: process.env.GOOGLE_CLOUD_PROJECT || 'asd-app-4e926',
     });
     initialized = true;
     console.log('[firebase] Admin SDK 已初始化（ADC）');
     return true;
   } catch (err) {
-    console.warn('[firebase] ADC 初始化失败:', err.message);
+    console.warn('[firebase] 所有初始化方式均失败:', err.message);
   }
 
   return false;

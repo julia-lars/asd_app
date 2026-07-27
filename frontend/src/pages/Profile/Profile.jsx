@@ -6,22 +6,13 @@ import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import DashboardPanel from '../../components/dashboard/DashboardPanel';
 import UpgradeBanner from '../../components/upgrade/UpgradeBanner';
 import UpgradePanel from '../../components/upgrade/UpgradePanel';
-import { IconProfile, IconSettings, IconFontSize, IconPassword, IconPhone, IconGlobe } from '../../components/common/Icons';
+import { IconProfile, IconSettings, IconFontSize, IconGlobe } from '../../components/common/Icons';
 import { useLanguage } from '../../i18n';
 
 const Profile = () => {
-  const { user, loading, logout, changePassword } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { t, fontSize, setFontSize, fontSizes } = useLanguage();
   const navigate = useNavigate();
-  const [passwordOpen, setPasswordOpen] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordMessage, setPasswordMessage] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [upgradePanelOpen, setUpgradePanelOpen] = useState(false);
 
   if (loading) {
@@ -45,53 +36,6 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
-  };
-
-  const handlePasswordField = (field) => (event) => {
-    setPasswordForm((prev) => ({ ...prev, [field]: event.target.value }));
-    setPasswordError('');
-    setPasswordMessage('');
-  };
-
-  const resetPasswordForm = () => {
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setPasswordError('');
-    setPasswordMessage('');
-  };
-
-  const handlePasswordSubmit = async (event) => {
-    event.preventDefault();
-    if (passwordSaving) return;
-
-    const { currentPassword, newPassword, confirmPassword } = passwordForm;
-
-    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      setPasswordError(t('profile.passwordRequired'));
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError(t('profile.passwordTooShort'));
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError(t('profile.passwordMismatch'));
-      return;
-    }
-
-    setPasswordSaving(true);
-    setPasswordError('');
-    setPasswordMessage('');
-    try {
-      await changePassword(currentPassword, newPassword, {
-        fallbackError: t('profile.passwordChangeFailed'),
-      });
-      setPasswordMessage(t('profile.passwordChanged'));
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : t('profile.passwordChangeFailed'));
-    } finally {
-      setPasswordSaving(false);
-    }
   };
 
   return (
@@ -176,14 +120,14 @@ const Profile = () => {
                 <div className="profile-field-list">
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">
-                      <IconGlobe style={{verticalAlign:'middle'}} />
+                      <IconGlobe style={{verticalAlign:'middle',color:'var(--spa-accent)'}} />
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.language')}</span>
                     </div>
                     <LanguageSwitcher align="flex-start" />
                   </div>
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">
-                      <IconFontSize style={{verticalAlign:'middle'}} />
+                      <IconFontSize style={{verticalAlign:'middle',color:'var(--spa-accent)'}} />
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.fontSize')}</span>
                     </div>
                     <div className="profile-font-size-options">
@@ -202,78 +146,6 @@ const Profile = () => {
                         );
                       })}
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPasswordOpen((open) => !open);
-                      resetPasswordForm();
-                    }}
-                    className="profile-action-row"
-                  >
-                    <IconPassword style={{verticalAlign:'middle'}} />
-                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.resetPwd')}</span>
-                    {passwordOpen && (
-                      <span className="ml-auto text-xs" style={{ color: 'var(--spa-accent-strong)' }}>
-                        {t('common.collapse')}
-                      </span>
-                    )}
-                  </button>
-                  {passwordOpen && (
-                    <form className="profile-password-form anim-slide-up" onSubmit={handlePasswordSubmit}>
-                      <label>
-                        <span>{t('profile.currentPassword')}</span>
-                        <input
-                          type="password"
-                          value={passwordForm.currentPassword}
-                          onChange={handlePasswordField('currentPassword')}
-                          className="spa-input"
-                          autoComplete="current-password"
-                        />
-                      </label>
-                      <label>
-                        <span>{t('profile.newPassword')}</span>
-                        <input
-                          type="password"
-                          value={passwordForm.newPassword}
-                          onChange={handlePasswordField('newPassword')}
-                          className="spa-input"
-                          autoComplete="new-password"
-                        />
-                      </label>
-                      <label>
-                        <span>{t('profile.confirmPassword')}</span>
-                        <input
-                          type="password"
-                          value={passwordForm.confirmPassword}
-                          onChange={handlePasswordField('confirmPassword')}
-                          className="spa-input"
-                          autoComplete="new-password"
-                        />
-                      </label>
-                      {passwordError && <p className="profile-form-error">{passwordError}</p>}
-                      {passwordMessage && <p className="profile-form-success">{passwordMessage}</p>}
-                      <div className="flex items-center justify-end gap-3 pt-1">
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          onClick={() => {
-                            resetPasswordForm();
-                            setPasswordOpen(false);
-                          }}
-                          disabled={passwordSaving}
-                        >
-                          {t('common.back')}
-                        </button>
-                        <button type="submit" className="btn-primary" disabled={passwordSaving}>
-                          {passwordSaving ? t('common.loading') : t('profile.savePassword')}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                  <div className="profile-action-row">
-                    <IconPhone style={{verticalAlign:'middle'}} />
-                    <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.bindPhone')}</span>
                   </div>
                 </div>
               </div>

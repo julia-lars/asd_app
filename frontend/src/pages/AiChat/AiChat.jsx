@@ -352,6 +352,26 @@ const AiChat = () => {
                   </div>
                 </div>
               )}
+              {sending && (
+                <div className="flex items-start gap-3 anim-slide-up px-6">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, rgba(122,154,184,0.25), rgba(168,156,200,0.25))' }}>
+                    <AiAvatarIcon />
+                  </div>
+                  <div className="glass-card" style={{ padding: '0.75rem 1rem', borderRadius: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                      {[0, 1, 2].map((i) => (
+                        <span key={i} style={{
+                          width: 7, height: 7, borderRadius: '50%',
+                          background: 'var(--spa-accent)',
+                          animation: `dotPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                          display: 'inline-block',
+                        }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
                 const timeLabel = formatTime(message.createdAt);

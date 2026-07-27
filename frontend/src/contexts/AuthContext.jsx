@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     const resp = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, gender: options.gender, age: options.age }),
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || options.fallbackError || '注册失败');

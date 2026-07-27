@@ -154,7 +154,7 @@ function authMiddleware(req, res, next) {
 app.post('/api/auth/register', async (req, res) => {
   const locale = localeFromRequest(req);
   try {
-    const { email, password, name } = req.body ?? {};
+    const { email, password, name, gender, age } = req.body ?? {};
     if (!email || !password) {
       return res.status(400).json({ error: serverMessage('auth.email_password_required', locale) });
     }
@@ -167,10 +167,12 @@ app.post('/api/auth/register', async (req, res) => {
       password: hashedPassword,
       role: 'family',
       tier: 'free',
+      childGender: gender || '',
+      childAge: age ? Number(age) : null,
     };
     await createUser(email, userData);
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { email, name: userData.name, uid: email, tier: 'free' } });
+    res.json({ token, user: { email, name: userData.name, uid: email, tier: 'free', childGender: userData.childGender, childAge: userData.childAge } });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -192,7 +194,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: serverMessage('auth.invalid_credentials', locale) });
     }
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { email, name: user.name, uid: email, tier: user.tier || 'free' } });
+    res.json({ token, user: { email, name: user.name, uid: email, tier: user.tier || 'free', childGender: user.childGender || '', childAge: user.childAge || null } });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -204,7 +206,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   if (!user) {
     return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
-  res.json({ user: { email: user.email, name: user.name, uid: user.email, tier: user.tier || 'free' } });
+  res.json({ user: { email: user.email, name: user.name, uid: user.email, tier: user.tier || 'free', childGender: user.childGender || '', childAge: user.childAge || null } });
 });
 
 app.post('/api/auth/password', authMiddleware, async (req, res) => {

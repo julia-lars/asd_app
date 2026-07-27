@@ -44,6 +44,8 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [gender, setGender] = useState('');
+  const [age, setAge] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -58,7 +60,7 @@ const Register = () => {
     setError('');
     setSubmitting(true);
     try {
-      await register(email, password, name, { locale, fallbackError: t('auth.error.registerFailed') });
+      await register(email, password, name, { locale, fallbackError: t('auth.error.registerFailed'), gender, age });
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
@@ -89,7 +91,27 @@ const Register = () => {
               {t('auth.name')}
             </label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              style={inputStyle} required placeholder={t('auth.name')} />
+              style={inputStyle} required />
+          </div>
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: 'var(--spa-muted)', marginBottom: '0.35rem' }}>
+                {t('auth.childGender')}
+              </label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)}
+                style={{ ...inputStyle, cursor: 'pointer' }} required>
+                <option value="">{t('auth.genderPlaceholder')}</option>
+                <option value="male">{t('auth.genderMale')}</option>
+                <option value="female">{t('auth.genderFemale')}</option>
+              </select>
+            </div>
+            <div style={{ width: '5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: 'var(--spa-muted)', marginBottom: '0.35rem' }}>
+                {t('auth.childAge')}
+              </label>
+              <input type="number" min={0} max={18} value={age} onChange={(e) => setAge(e.target.value)}
+                style={inputStyle} required placeholder="0" />
+            </div>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: 'var(--spa-muted)', marginBottom: '0.35rem' }}>

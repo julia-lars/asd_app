@@ -143,6 +143,22 @@ const Profile = () => {
                   </div>
                   <div className="profile-info-row">
                     <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
+                      {t('profile.childGender')}
+                    </span>
+                    <span className="text-sm" style={{ color: 'var(--spa-text)' }}>
+                      {user.childGender === 'male' ? t('auth.genderMale') : user.childGender === 'female' ? t('auth.genderFemale') : '-'}
+                    </span>
+                  </div>
+                  <div className="profile-info-row">
+                    <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
+                      {t('profile.childAge')}
+                    </span>
+                    <span className="text-sm" style={{ color: 'var(--spa-text)' }}>
+                      {user.childAge != null ? t('profile.ageValue', { age: user.childAge }) : '-'}
+                    </span>
+                  </div>
+                  <div className="profile-info-row">
+                    <span className="text-sm font-medium" style={{ color: 'var(--spa-muted)', minWidth: '4rem' }}>
                       {t('profile.uid')}
                     </span>
                     <span className="text-xs font-mono truncate" style={{ color: 'var(--spa-text)' }}>

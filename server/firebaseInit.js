@@ -22,16 +22,19 @@ export function ensureFirebase() {
   const jsonEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (jsonEnv) {
     try {
+      console.log('[firebase] JSON 长度:', jsonEnv.length, '前50字符:', jsonEnv.substring(0, 50));
       const sa = JSON.parse(jsonEnv);
+      console.log('[firebase] JSON 解析成功, project_id:', sa.project_id, 'client_email:', sa.client_email);
       admin.initializeApp({
         credential: admin.credential.cert(sa),
         projectId: sa.project_id || 'asd-app-4e926',
       });
       initialized = true;
-      console.log('[firebase] Admin SDK 已初始化（环境变量 JSON）project:', sa.project_id);
+      console.log('[firebase] Admin SDK 已初始化（环境变量 JSON）');
       return true;
     } catch (err) {
-      console.warn('[firebase] 环境变量 JSON 解析失败:', err.message);
+      console.warn('[firebase] JSON 解析失败:', err.message);
+      console.warn('[firebase] JSON 前100字符:', jsonEnv.substring(0, 100));
     }
   }
 

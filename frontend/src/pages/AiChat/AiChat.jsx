@@ -87,6 +87,14 @@ const UserAvatarIcon = () => (
   </svg>
 );
 
+const MicIcon = ({ active }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <rect x="9" y="1" width="6" height="11" rx="3" stroke={active ? '#fff' : 'var(--spa-muted)'} strokeWidth={1.8} />
+    <path d="M5 11a7 7 0 0 0 14 0" stroke={active ? '#fff' : 'var(--spa-muted)'} strokeWidth={1.8} strokeLinecap="round" />
+    <path d="M12 19v4M8 23h8" stroke={active ? '#fff' : 'var(--spa-muted)'} strokeWidth={1.8} strokeLinecap="round" />
+  </svg>
+);
+
 const SendIcon = () => (
   <svg
     className="send-icon"
@@ -144,9 +152,42 @@ const AiChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [listening, setListening] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const navigate = useNavigate();
   const listRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const hasSpeech = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const rec = new SpeechRecognition();
+    rec.lang = locale === 'zh-CN' ? 'zh-CN' : locale || 'zh-CN';
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.onresult = (e) => {
+      let transcript = '';
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      setInput((prev) => prev + transcript);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setListening(true);
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setListening(false);
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -162,6 +203,12 @@ const AiChat = () => {
       // ignore
     }
   }, [loading, user, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
+  }, []);
 
   useEffect(() => {
     if (listRef.current) {
@@ -448,6 +495,22 @@ const AiChat = () => {
                   className="flex-1 border-0 bg-transparent px-1 text-[15px] focus:outline-none focus:ring-0"
                   style={{ color: 'var(--spa-text)' }}
                 />
+                {hasSpeech && (
+                  <button
+                    onClick={listening ? stopListening : startListening}
+                    disabled={sending}
+                    aria-label={listening ? '停止录音' : '语音输入'}
+                    className="flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                    style={{
+                      background: listening
+                        ? '#ef4444'
+                        : 'rgba(200,200,200,0.15)',
+                      animation: listening ? 'pulseRed 1.2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    <MicIcon active={listening} />
+                  </button>
+                )}
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || sending}

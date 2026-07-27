@@ -15,4 +15,4 @@ services:
       - key: MCP_TRANSPORT
         value: stdio
       - key: DEEPSEEK_MODEL
-        value: deepseek-chat
+        value: deepseek-v4-pro

@@ -45,6 +45,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const { register } = useAuth();
@@ -55,11 +56,13 @@ const Register = () => {
     e.preventDefault();
     if (!agreed) { setError(t('auth.privacyRequired')); return; }
     setError('');
+    setSubmitting(true);
     try {
       await register(email, password, name, { locale, fallbackError: t('auth.error.registerFailed') });
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
+      setSubmitting(false);
     }
   };
 
@@ -116,8 +119,14 @@ const Register = () => {
             </label>
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', padding: '0.7rem', fontSize: '0.9rem' }}>
-            {t('auth.register.submit')}
+          <button type="submit" className="btn-primary" disabled={submitting}
+            style={{ width: '100%', padding: '0.7rem', fontSize: '0.9rem', opacity: submitting ? 0.7 : 1 }}>
+            {submitting ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />
+                {t('common.loading')}
+              </span>
+            ) : t('auth.register.submit')}
           </button>
         </form>
 

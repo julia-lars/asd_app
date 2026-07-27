@@ -7,6 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const { locale, t } = useLanguage();
   const navigate = useNavigate();
@@ -14,11 +15,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       await login(email, password, { locale, fallbackError: t('auth.error.loginFailed') });
       navigate('/ai-chat');
     } catch (err) {
       setError(err.message);
+      setSubmitting(false);
     }
   };
 
@@ -66,8 +69,14 @@ const Login = () => {
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
               style={inputStyle} required />
           </div>
-          <button type="submit" className="btn-primary" style={{ marginTop: '0.3rem', width: '100%', padding: '0.7rem', fontSize: '0.9rem' }}>
-            {t('auth.login.submit')}
+          <button type="submit" className="btn-primary" disabled={submitting}
+            style={{ marginTop: '0.3rem', width: '100%', padding: '0.7rem', fontSize: '0.9rem', opacity: submitting ? 0.7 : 1 }}>
+            {submitting ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />
+                {t('common.loading')}
+              </span>
+            ) : t('auth.login.submit')}
           </button>
         </form>
 

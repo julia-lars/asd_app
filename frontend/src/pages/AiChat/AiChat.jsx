@@ -455,7 +455,9 @@ const AiChat = () => {
                     boxShadow: input.trim() && !sending ? '0 4px 16px rgba(122,154,184,0.3)' : 'none'
                   }}
                 >
-                  {sending ? <span className="send-loading" aria-hidden="true">…</span> : <SendIcon />}
+                  {sending ? (
+                    <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />
+                  ) : <SendIcon />}
                 </button>
               </div>
             </div>

@@ -14,17 +14,11 @@ export function ensureFirebase() {
     return true;
   }
 
-  console.log('[firebase] 开始初始化...');
-  console.log('[firebase] GOOGLE_APPLICATION_CREDENTIALS_JSON 存在:', !!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-  console.log('[firebase] FIREBASE_SERVICE_ACCOUNT_PATH 存在:', !!process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-
   // 方式 1：环境变量 GOOGLE_APPLICATION_CREDENTIALS_JSON
   const jsonEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (jsonEnv) {
     try {
-      console.log('[firebase] JSON 长度:', jsonEnv.length, '前50字符:', jsonEnv.substring(0, 50));
       const sa = JSON.parse(jsonEnv);
-      console.log('[firebase] JSON 解析成功, project_id:', sa.project_id, 'client_email:', sa.client_email);
       admin.initializeApp({
         credential: admin.credential.cert(sa),
         projectId: sa.project_id || 'asd-app-4e926',

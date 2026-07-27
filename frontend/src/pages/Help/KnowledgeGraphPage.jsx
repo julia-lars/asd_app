@@ -155,7 +155,14 @@ const KnowledgeGraphPage = () => {
           setStatus(t('kg.edgeStatusFull', { source: src, relation: rel, target: tgt, fullName }));
         }
         if (pmid) {
-          setEdgeLink({ pmid, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` });
+          setEdgeLink({ pmid, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`, title: null, loading: true });
+          fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmid}&retmode=json`)
+            .then((r) => r.json())
+            .then((data) => {
+              const title = data?.result?.[pmid]?.title || null;
+              setEdgeLink((prev) => prev?.pmid === pmid ? { pmid, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`, title, loading: false } : prev);
+            })
+            .catch(() => setEdgeLink((prev) => prev?.pmid === pmid ? { pmid, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`, title: null, loading: false } : prev));
         } else {
           setEdgeLink(null);
         }
@@ -355,10 +362,16 @@ const KnowledgeGraphPage = () => {
             href={edgeLink.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-0.5 text-[11px] font-medium inline-flex items-center gap-1"
-            style={{ color: 'var(--spa-accent-strong)', textDecoration: 'underline' }}
+            className="mt-0.5 text-[11px] font-medium"
+            style={{ color: 'var(--spa-accent-strong)', textDecoration: 'underline', lineHeight: 1.4 }}
           >
-            📄 PubMed: {edgeLink.pmid} →
+            {edgeLink.loading ? (
+              <span style={{ opacity: 0.6 }}>📄 正在获取文献标题…</span>
+            ) : edgeLink.title ? (
+              <span>📄 {edgeLink.title}</span>
+            ) : (
+              <span>📄 PubMed: {edgeLink.pmid} →</span>
+            )}
           </a>
         )}
         <p className="mt-0.5 text-[10px]" style={{ color: 'var(--spa-muted)' }}>

@@ -208,47 +208,39 @@ const AiChat = () => {
     const now = new Date();
     setMessages((prev) => [
       ...prev,
-      {
-        role: 'user',
-        content: text,
-        createdAt: now,
-        status: 'sent'
-      }
+      { role: 'user', content: text, createdAt: now, status: 'sent' },
+      { role: 'assistant', content: '', createdAt: new Date(), _typing: true },
     ]);
     setInput('');
-
     setSending(true);
 
     try {
       const replyText = await fetchAIResponse(text);
       setMessages((prev) => {
         const updated = [...prev];
+        // 标记上一条用户消息为已读
         for (let i = updated.length - 1; i >= 0; i -= 1) {
-          if (updated[i].role === 'user') {
-            updated[i] = { ...updated[i], status: 'read' };
-            break;
-          }
+          if (updated[i].role === 'user') { updated[i] = { ...updated[i], status: 'read' }; break; }
         }
-
-        return [
-          ...updated,
-          {
-            role: 'assistant',
-            content: stripAssistantBoldMarkers(replyText || t('ai.noReply')),
-            createdAt: new Date()
-          }
-        ];
+        // 替换最后一个 typing 消息
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: stripAssistantBoldMarkers(replyText || t('ai.noReply')),
+          createdAt: new Date(),
+        };
+        return updated;
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
           role: 'assistant',
           content: stripAssistantBoldMarkers(t('ai.callFailed', { message: msg })),
-          createdAt: new Date()
-        }
-      ]);
+          createdAt: new Date(),
+        };
+        return updated;
+      });
     } finally {
       setSending(false);
     }
@@ -352,26 +344,6 @@ const AiChat = () => {
                   </div>
                 </div>
               )}
-              {sending && (
-                <div className="flex items-start gap-3 anim-slide-up px-6">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, rgba(122,154,184,0.25), rgba(168,156,200,0.25))' }}>
-                    <AiAvatarIcon />
-                  </div>
-                  <div className="glass-card" style={{ padding: '0.75rem 1rem', borderRadius: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.3rem' }}>
-                      {[0, 1, 2].map((i) => (
-                        <span key={i} style={{
-                          width: 7, height: 7, borderRadius: '50%',
-                          background: 'var(--spa-accent)',
-                          animation: `dotPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-                          display: 'inline-block',
-                        }} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
                 const timeLabel = formatTime(message.createdAt);
@@ -400,7 +372,20 @@ const AiChat = () => {
                             ? t('ai.hello')
                             : isUser
                               ? message.content
-                              : stripAssistantBoldMarkers(message.content)}
+                              : message._typing
+                                ? (
+                                  <span style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', minHeight: 20 }}>
+                                    {[0, 1, 2].map((i) => (
+                                      <span key={i} style={{
+                                        width: 6, height: 6, borderRadius: '50%',
+                                        background: 'var(--spa-muted)',
+                                        animation: `dotPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                                        display: 'inline-block',
+                                      }} />
+                                    ))}
+                                  </span>
+                                )
+                                : stripAssistantBoldMarkers(message.content)}
                         </p>
                         {message.link && (
                           <a

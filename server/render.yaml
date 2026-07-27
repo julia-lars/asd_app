@@ -16,3 +16,5 @@ services:
         value: stdio
       - key: DEEPSEEK_MODEL
         value: deepseek-v4-pro
+      - key: FIREBASE_SERVICE_ACCOUNT_PATH
+        value: service-account.json

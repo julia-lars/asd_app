@@ -1,10 +1,10 @@
 import 'dotenv/config';
+import { ensureFirebase } from './firebaseInit.js';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Stripe from 'stripe';
@@ -25,6 +25,7 @@ import {
   runWithLongTermLock,
   saveLongTermMemory,
 } from './longTermMemory.js';
+import { getUser, createUser, updateUser, userExists } from './userStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -133,22 +134,6 @@ app.use(express.json({ limit: '1mb' }));
 
 /* ========== JWT Auth ========== */
 const JWT_SECRET = process.env.JWT_SECRET || 'asd-app-jwt-secret-change-in-production';
-const USERS_FILE = path.join(__dirname, 'users.json');
-
-let users = {};
-function loadUsers() {
-  if (existsSync(USERS_FILE)) {
-    try {
-      users = JSON.parse(readFileSync(USERS_FILE, 'utf-8'));
-    } catch {
-      users = {};
-    }
-  }
-}
-function saveUsers() {
-  writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-loadUsers();
 
 function authMiddleware(req, res, next) {
   const locale = localeFromRequest(req);
@@ -173,21 +158,19 @@ app.post('/api/auth/register', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: serverMessage('auth.email_password_required', locale) });
     }
-    if (users[email]) {
+    if (await userExists(email)) {
       return res.status(400).json({ error: serverMessage('auth.email_registered', locale) });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    users[email] = {
-      email,
+    const userData = {
       name: name || email.split('@')[0],
       password: hashedPassword,
       role: 'family',
       tier: 'free',
-      createdAt: new Date().toISOString(),
     };
-    saveUsers();
+    await createUser(email, userData);
     const token = jwt.sign({ email, uid: email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { email, name: name || email.split('@')[0], uid: email, tier: 'free' } });
+    res.json({ token, user: { email, name: userData.name, uid: email, tier: 'free' } });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -200,7 +183,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: serverMessage('auth.email_password_required', locale) });
     }
-    const user = users[email];
+    const user = await getUser(email);
     if (!user) {
       return res.status(400).json({ error: serverMessage('auth.invalid_credentials', locale) });
     }
@@ -215,9 +198,9 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.get('/api/auth/me', authMiddleware, (req, res) => {
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
   const locale = localeFromRequest(req);
-  const user = users[req.user.email];
+  const user = await getUser(req.user.email);
   if (!user) {
     return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
@@ -227,7 +210,7 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 app.post('/api/auth/password', authMiddleware, async (req, res) => {
   const locale = localeFromRequest(req);
   try {
-    const user = users[req.user.email];
+    const user = await getUser(req.user.email);
     if (!user) {
       return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
     }
@@ -245,12 +228,10 @@ app.post('/api/auth/password', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: serverMessage('auth.current_password_wrong', locale) });
     }
 
-    users[req.user.email] = {
-      ...user,
+    await updateUser(req.user.email, {
       password: await bcrypt.hash(String(newPassword), 10),
       passwordUpdatedAt: new Date().toISOString(),
-    };
-    saveUsers();
+    });
     res.json({ ok: true, message: serverMessage('auth.password_updated', locale) });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
@@ -446,9 +427,9 @@ app.post('/api/ai/session/reset', async (req, res) => {
 /* ========== 订阅 & 支付 ========== */
 
 /** 获取当前用户订阅状态 */
-app.get('/api/user/subscription', authMiddleware, (req, res) => {
+app.get('/api/user/subscription', authMiddleware, async (req, res) => {
   const locale = localeFromRequest(req);
-  const user = users[req.user.email];
+  const user = await getUser(req.user.email);
   if (!user) {
     return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
@@ -479,18 +460,17 @@ app.post('/api/admin/clear-posts', authMiddleware, async (_req, res) => {
 });
 
 /** 直接升级用户层级（开发阶段，暂不接入支付） */
-app.post('/api/user/upgrade', authMiddleware, (req, res) => {
+app.post('/api/user/upgrade', authMiddleware, async (req, res) => {
   const locale = localeFromRequest(req);
   const { tier } = req.body ?? {};
   if (!tier || !['free', 'mid', 'premium'].includes(tier)) {
     return res.status(400).json({ error: '无效的层级' });
   }
-  const user = users[req.user.email];
+  const user = await getUser(req.user.email);
   if (!user) {
     return res.status(401).json({ error: serverMessage('auth.user_missing', locale) });
   }
-  user.tier = tier;
-  saveUsers();
+  await updateUser(req.user.email, { tier });
   console.log(`[server] 用户 ${req.user.email} 升级至 ${tier}`);
   res.json({ ok: true, tier });
 });
@@ -514,7 +494,7 @@ app.post('/api/payment/create-checkout', authMiddleware, async (req, res) => {
       return res.status(500).json({ error: `未配置 ${tier} 层级的价格 ID` });
     }
 
-    const user = users[req.user.email];
+    const user = await getUser(req.user.email);
     const session = await s.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['alipay', 'wechat_pay', 'card'],
@@ -556,11 +536,8 @@ app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), asyn
     const userEmail = session.client_reference_id || session.metadata?.userEmail;
     const tier = session.metadata?.tier || 'mid';
 
-    if (userEmail && users[userEmail]) {
-      users[userEmail].tier = tier;
-      users[userEmail].subscriptionId = session.subscription;
-      users[userEmail].subscriptionExpiry = null; // Stripe 管理续费
-      saveUsers();
+    if (userEmail) {
+      await updateUser(userEmail, { tier, subscriptionId: session.subscription, subscriptionExpiry: null });
       console.log(`[server] 用户 ${userEmail} 升级至 ${tier}`);
     }
   }
@@ -569,11 +546,8 @@ app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), asyn
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
     const userEmail = subscription.metadata?.userEmail;
-    if (userEmail && users[userEmail]) {
-      users[userEmail].tier = 'free';
-      users[userEmail].subscriptionId = null;
-      users[userEmail].subscriptionExpiry = null;
-      saveUsers();
+    if (userEmail) {
+      await updateUser(userEmail, { tier: 'free', subscriptionId: null, subscriptionExpiry: null });
       console.log(`[server] 用户 ${userEmail} 订阅已取消，降级至 free`);
     }
   }
@@ -581,6 +555,7 @@ app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), asyn
   res.json({ received: true });
 });
 
+ensureFirebase();
 app.listen(PORT, () => {
   console.log(`[server] listening on http://localhost:${PORT}`);
   console.log(

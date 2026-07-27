@@ -124,7 +124,7 @@ const Profile = () => {
 
             <div className="profile-card-stack">
               <div className="profile-section anim-slide-up" style={{ animationDelay: '0ms' }}>
-                <div className="flex items-center gap-2 mb-5">
+                <div className="flex items-center gap-2 mb-7">
                   <IconProfile style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.profile')}</h3>
                 </div>
@@ -169,14 +169,14 @@ const Profile = () => {
               </div>
 
               <div className="profile-section anim-slide-up" style={{ animationDelay: '60ms' }}>
-                <div className="flex items-center gap-2 mb-5">
+                <div className="flex items-center gap-2 mb-7">
                   <IconSettings style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.settings')}</h3>
                 </div>
                 <div className="profile-field-list">
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">
-                      <IconSettings style={{verticalAlign:'middle'}} />
+                      <IconGlobe style={{verticalAlign:'middle'}} />
                       <span className="text-sm" style={{ color: 'var(--spa-muted)' }}>{t('profile.language')}</span>
                     </div>
                     <LanguageSwitcher align="flex-start" />

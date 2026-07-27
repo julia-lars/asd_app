@@ -117,6 +117,7 @@ const Profile = () => {
                   <IconSettings style={{color:'var(--spa-accent)'}} />
                   <h3 className="text-lg font-semibold" style={{ color: 'var(--spa-text)' }}>{t('profile.settings')}</h3>
                 </div>
+                <div style={{ height: '0.5rem' }} />
                 <div className="profile-field-list">
                   <div className="profile-settings-card">
                     <div className="flex items-center gap-3 mb-3">

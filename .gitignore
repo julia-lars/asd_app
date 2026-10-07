@@ -1,3 +1,10 @@
 .DS_Store
 server/.env
 **/service-account.json
+# 服务账号私钥（根目录）——严禁提交
+asd-app-*-firebase-adminsdk*.json
+# 本地录屏等大文件
+录屏*.mov
+*.mov
+# 正念音频源文件（线上音频在 frontend/public/audio）
+正念音频/

@@ -248,19 +248,41 @@ const AiChat = () => {
       throw new Error(msg);
     }
 
-    // 服务端未启用流式时（响应不是 SSE），退回一次性 JSON
-    const contentType = resp.headers.get('content-type') ?? '';
-    if (!contentType.includes('text/event-stream')) {
-      const data = await resp.json().catch(() => ({}));
+    // 注意：跨域时浏览器可能读不到 content-type（text/event-stream 不在 CORS 白名单），
+    // 所以先读第一块内容嗅探：SSE 以 event: 开头，一次性 JSON 以 { 开头
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    let firstDone = false;
+    while (!firstDone) {
+      const { done, value } = await reader.read();
+      firstDone = done;
+      if (!done) buffer += decoder.decode(value, { stream: true });
+      if (done || buffer.trim()) break;
+    }
+
+    const isSse = /^\s*event:/m.test(buffer);
+
+    if (!isSse) {
+      // 一次性 JSON 返回：读完剩余内容再解析
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+      }
+      let data = {};
+      try {
+        data = JSON.parse(buffer);
+      } catch {
+        // 非 JSON 忽略，走空内容兜底
+      }
       const replyText = typeof data?.text === 'string' ? data.text : '';
       persistConversationId(data?.conversationId);
       return replyText;
     }
 
     // 解析 SSE：meta → delta* → done / error
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
     let fullText = '';
     let finalText = null;
 
@@ -278,30 +300,35 @@ const AiChat = () => {
       }
     };
 
+    const consumeBuffer = () => {
+      let sepIndex;
+      while ((sepIndex = buffer.indexOf('\n\n')) >= 0) {
+        const rawEvent = buffer.slice(0, sepIndex);
+        buffer = buffer.slice(sepIndex + 2);
+        let event = 'message';
+        const dataLines = [];
+        for (const line of rawEvent.split('\n')) {
+          if (line.startsWith('event:')) event = line.slice(6).trim();
+          else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+        }
+        if (!dataLines.length) continue;
+        let payload;
+        try {
+          payload = JSON.parse(dataLines.join('\n'));
+        } catch {
+          continue;
+        }
+        handleEvent(event, payload);
+      }
+    };
+
     try {
+      consumeBuffer();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        let sepIndex;
-        while ((sepIndex = buffer.indexOf('\n\n')) >= 0) {
-          const rawEvent = buffer.slice(0, sepIndex);
-          buffer = buffer.slice(sepIndex + 2);
-          let event = 'message';
-          const dataLines = [];
-          for (const line of rawEvent.split('\n')) {
-            if (line.startsWith('event:')) event = line.slice(6).trim();
-            else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
-          }
-          if (!dataLines.length) continue;
-          let payload;
-          try {
-            payload = JSON.parse(dataLines.join('\n'));
-          } catch {
-            continue;
-          }
-          handleEvent(event, payload);
-        }
+        consumeBuffer();
       }
     } catch (error) {
       reader.cancel().catch(() => {});

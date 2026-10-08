@@ -223,6 +223,8 @@ async function handleStreamChat({ req, res, locale, message, systemPrompt, conve
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
+  // text/event-stream 不在浏览器 CORS 安全名单里，跨域时前端必须显式暴露才能读到 content-type
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Type');
   res.flushHeaders?.();
 
   const send = (event, data) => {

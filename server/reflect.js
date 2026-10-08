@@ -59,6 +59,8 @@ export async function runReflect(client, { userText, assistantText, previousMemo
       model: reflectModel,
       temperature: 0.25,
       response_format: { type: 'json_object' },
+      // 与主对话一致：默认关闭思考阶段，否则 25s 归纳超时内几乎无法完成
+      ...(process.env.DEEPSEEK_THINKING === 'on' ? {} : { thinking: { type: 'disabled' } }),
     },
   });
 

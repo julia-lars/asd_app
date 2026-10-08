@@ -216,16 +216,30 @@ const AiChat = () => {
     }
   }, [messages]);
 
-  const fetchAIResponse = async (text) => {
-    const resp = await fetch(`${API_BASE}/api/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
-      body: JSON.stringify({
+  const persistConversationId = (nextCid) => {
+    if (!nextCid || !user?.uid) return;
+    setConversationId(nextCid);
+    try {
+      sessionStorage.setItem(`ai_chat_cid_${user.uid}`, nextCid);
+    } catch {
+      // ignore
+    }
+  };
+
+  const fetchAIResponse = async (text, onDelta) => {
+    const buildBody = (useStream) =>
+      JSON.stringify({
         message: text,
         userId: user.uid,
         locale,
+        ...(useStream ? { stream: true } : {}),
         ...(conversationId ? { conversationId } : {})
-      })
+      });
+
+    const resp = await fetch(`${API_BASE}/api/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
+      body: buildBody(true)
     });
 
     if (!resp.ok) {
@@ -234,17 +248,67 @@ const AiChat = () => {
       throw new Error(msg);
     }
 
-    const data = await resp.json();
-    const replyText = typeof data?.text === 'string' ? data.text : '';
-    if (data?.conversationId && user?.uid) {
-      setConversationId(data.conversationId);
-      try {
-        sessionStorage.setItem(`ai_chat_cid_${user.uid}`, data.conversationId);
-      } catch {
-        // ignore
-      }
+    // 服务端未启用流式时（响应不是 SSE），退回一次性 JSON
+    const contentType = resp.headers.get('content-type') ?? '';
+    if (!contentType.includes('text/event-stream')) {
+      const data = await resp.json().catch(() => ({}));
+      const replyText = typeof data?.text === 'string' ? data.text : '';
+      persistConversationId(data?.conversationId);
+      return replyText;
     }
-    return replyText;
+
+    // 解析 SSE：meta → delta* → done / error
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    let finalText = null;
+
+    const handleEvent = (event, data) => {
+      if (event === 'delta' && typeof data?.delta === 'string') {
+        fullText += data.delta;
+        onDelta?.(data.delta);
+      } else if (event === 'meta' && data?.conversationId) {
+        persistConversationId(data.conversationId);
+      } else if (event === 'done') {
+        finalText = typeof data?.text === 'string' ? data.text : fullText;
+        persistConversationId(data?.conversationId);
+      } else if (event === 'error') {
+        throw new Error(data?.message ? String(data.message) : 'stream error');
+      }
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let sepIndex;
+        while ((sepIndex = buffer.indexOf('\n\n')) >= 0) {
+          const rawEvent = buffer.slice(0, sepIndex);
+          buffer = buffer.slice(sepIndex + 2);
+          let event = 'message';
+          const dataLines = [];
+          for (const line of rawEvent.split('\n')) {
+            if (line.startsWith('event:')) event = line.slice(6).trim();
+            else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+          }
+          if (!dataLines.length) continue;
+          let payload;
+          try {
+            payload = JSON.parse(dataLines.join('\n'));
+          } catch {
+            continue;
+          }
+          handleEvent(event, payload);
+        }
+      }
+    } catch (error) {
+      reader.cancel().catch(() => {});
+      throw error;
+    }
+
+    return finalText ?? fullText;
   };
 
   const handleSend = async () => {
@@ -261,15 +325,40 @@ const AiChat = () => {
     setInput('');
     setSending(true);
 
+    let streamedText = '';
     try {
-      const replyText = await fetchAIResponse(text);
+      const replyText = await fetchAIResponse(text, (delta) => {
+        if (!streamedText) {
+          // 首字到达即标记用户消息为已读
+          setMessages((prev) => {
+            const updated = [...prev];
+            for (let i = updated.length - 1; i >= 0; i -= 1) {
+              if (updated[i].role === 'user') { updated[i] = { ...updated[i], status: 'read' }; break; }
+            }
+            return updated;
+          });
+        }
+        streamedText += delta;
+        // 边收边显示，替换 typing 占位
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...updated[updated.length - 1],
+            role: 'assistant',
+            content: stripAssistantBoldMarkers(streamedText),
+            _typing: false,
+          };
+          return updated;
+        });
+      });
+
       setMessages((prev) => {
         const updated = [...prev];
-        // 标记上一条用户消息为已读
+        // 标记上一条用户消息为已读（流式未回调时的兜底）
         for (let i = updated.length - 1; i >= 0; i -= 1) {
           if (updated[i].role === 'user') { updated[i] = { ...updated[i], status: 'read' }; break; }
         }
-        // 替换最后一个 typing 消息
+        // 用服务端最终文本替换，去掉流式显示的残留标记
         updated[updated.length - 1] = {
           role: 'assistant',
           content: stripAssistantBoldMarkers(replyText || t('ai.noReply')),
@@ -279,11 +368,15 @@ const AiChat = () => {
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      // 已有部分内容时保留，仅追加中断提示
+      const fallbackContent = streamedText
+        ? `${stripAssistantBoldMarkers(streamedText)}${t('ai.interrupted')}`
+        : stripAssistantBoldMarkers(t('ai.callFailed', { message: msg }));
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
           role: 'assistant',
-          content: stripAssistantBoldMarkers(t('ai.callFailed', { message: msg })),
+          content: fallbackContent,
           createdAt: new Date(),
         };
         return updated;

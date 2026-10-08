@@ -16,5 +16,9 @@ services:
         value: stdio
       - key: DEEPSEEK_MODEL
         value: deepseek-v4-pro
+      - key: DEEPSEEK_MAX_TOKENS
+        value: "2048"
+      - key: DEEPSEEK_THINKING
+        value: "off"
       - key: FIREBASE_SERVICE_ACCOUNT_PATH
         value: service-account.json

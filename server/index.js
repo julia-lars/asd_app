@@ -109,7 +109,10 @@ function textFromMcpToolResult(result) {
 }
 
 const REFLECT_TIMEOUT_MS = Number(process.env.REFLECT_TIMEOUT_MS ?? 25000);
-const CHAT_MAX_TOKENS = Number.parseInt(process.env.DEEPSEEK_MAX_TOKENS ?? '700', 10);
+/** 输出 token 上限（推理模型时同时覆盖思考+回答） */
+const CHAT_MAX_TOKENS = Number.parseInt(process.env.DEEPSEEK_MAX_TOKENS ?? '2048', 10);
+/** 推理思考阶段会大幅拖慢回复（分钟级）并可能吃满 max_tokens 导致空回复；默认关闭，设置 DEEPSEEK_THINKING=on 恢复 */
+const CHAT_THINKING_ON = (process.env.DEEPSEEK_THINKING ?? 'off') === 'on';
 
 async function getMcpClient() {
   if (mcpClientPromise) return mcpClientPromise;
@@ -126,6 +129,178 @@ async function getMcpClient() {
   })();
 
   return mcpClientPromise;
+}
+
+/* ========== 流式对话（SSE，直连 DeepSeek API，实时返回增量） ========== */
+
+const DEEPSEEK_API_URL = `${(process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com').replace(/\/+$/, '')}/chat/completions`;
+
+/** 逐块解析 DeepSeek SSE 流，产出 content 增量文本 */
+async function* streamDeepseekChat(requestBody, signal) {
+  const resp = await fetch(DEEPSEEK_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({ ...requestBody, stream: true, stream_options: { include_usage: true } }),
+    signal,
+  });
+
+  if (!resp.ok || !resp.body) {
+    const raw = await resp.text().catch(() => '');
+    let detail = `HTTP ${resp.status}`;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.error?.message) detail = String(parsed.error.message);
+    } catch {
+      // 非 JSON 错误体，保留 HTTP 状态
+    }
+    throw new Error(detail);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(data);
+        const delta = parsed?.choices?.[0]?.delta?.content;
+        if (typeof delta === 'string' && delta) yield delta;
+      } catch {
+        // 忽略心跳等非 JSON 行
+      }
+    }
+  }
+}
+
+/** 流式响应结束后，在锁内串行完成「归纳」并保存长期记忆（不阻塞用户继续提问） */
+function queueBackgroundReflect({ uidForLtm, conversationId, userText, assistantText, locale }) {
+  Promise.resolve()
+    .then(() =>
+      runWithLongTermLock(uidForLtm, conversationId, async () => {
+        const previousMemory = await getLongTermMemory(uidForLtm, conversationId);
+        try {
+          const client = await getMcpClient();
+          const parsed = await Promise.race([
+            runReflect(client, {
+              userText,
+              assistantText: assistantText || serverMessage('ai.empty_reply', locale),
+              previousMemory,
+              locale,
+            }),
+            new Promise((_, reject) => {
+              setTimeout(() => reject(new Error(serverMessage('ai.reflect_timeout', locale))), REFLECT_TIMEOUT_MS);
+            }),
+          ]);
+          if (parsed) {
+            const nextState = mergeReflectIntoMemory(previousMemory, parsed);
+            if (nextState) {
+              await saveLongTermMemory(uidForLtm, conversationId, nextState);
+            }
+          }
+        } catch (reflectErr) {
+          console.error('[server] stream reflect failed (主对话仍成功):', reflectErr);
+        }
+      }),
+    )
+    .catch((err) => console.error('[server] background reflect queue failed:', err));
+}
+
+/** 流式对话主流程：SSE 事件 meta → delta* → done；「归纳」放后台执行 */
+async function handleStreamChat({ req, res, locale, message, systemPrompt, conversationId, uidForLtm }) {
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders?.();
+
+  const send = (event, data) => {
+    if (res.writableEnded || res.destroyed) return;
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  let fullText = '';
+
+  try {
+    const previousMemory = await getLongTermMemory(uidForLtm, conversationId);
+    const dynamicBlock = buildLongTermContext(previousMemory, locale);
+
+    const systemParts = [];
+    const fixedSystemPrompt = getFixedSystemPrompt(locale);
+    if (fixedSystemPrompt.trim()) {
+      systemParts.push(fixedSystemPrompt.trim());
+    }
+    if (dynamicBlock) {
+      systemParts.push(dynamicBlock);
+    }
+    if (systemPrompt?.trim()) {
+      systemParts.push(systemPrompt.trim());
+    }
+    const combinedSystem = systemParts.join('\n\n');
+
+    send('meta', { conversationId });
+
+    const controller = new AbortController();
+    const onClose = () => controller.abort();
+    req.on('close', onClose);
+
+    let streamError = null;
+    try {
+      for await (const delta of streamDeepseekChat({
+        model: process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-pro',
+        temperature: 0.7,
+        max_tokens: Number.isFinite(CHAT_MAX_TOKENS) && CHAT_MAX_TOKENS > 0 ? CHAT_MAX_TOKENS : 2048,
+        messages: [
+          ...(combinedSystem
+            ? [{ role: 'system', content: combinedSystem }]
+            : []),
+          { role: 'user', content: message },
+        ],
+        ...(CHAT_THINKING_ON ? {} : { thinking: { type: 'disabled' } }),
+      }, controller.signal)) {
+        if (res.writableEnded || res.destroyed) break;
+        fullText += delta;
+        send('delta', { delta });
+      }
+    } catch (error) {
+      streamError = error;
+    } finally {
+      req.off('close', onClose);
+    }
+
+    if (streamError && !fullText) {
+      send('error', { message: streamError instanceof Error ? streamError.message : String(streamError) });
+      res.end();
+      return;
+    }
+
+    // 先结束响应让用户继续提问，「归纳」在后台串行完成
+    send('done', { text: fullText, conversationId });
+    res.end();
+
+    queueBackgroundReflect({
+      uidForLtm,
+      conversationId,
+      userText: message,
+      assistantText: fullText,
+      locale,
+    });
+  } catch (error) {
+    console.error('[server] /api/ai/chat stream error:', error);
+    send('error', { message: error instanceof Error ? error.message : String(error) });
+    res.end();
+  }
 }
 
 const app = express();
@@ -285,7 +460,7 @@ app.get('/api/ai/session', async (req, res) => {
 app.post('/api/ai/chat', async (req, res) => {
   const locale = localeFromRequest(req);
   try {
-    const { message, systemPrompt, conversationId: bodyCid, userId } = req.body ?? {};
+    const { message, systemPrompt, conversationId: bodyCid, userId, stream } = req.body ?? {};
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: serverMessage('ai.message_required', locale) });
       return;
@@ -314,6 +489,15 @@ app.post('/api/ai/chat', async (req, res) => {
     const conversationId =
       typeof bodyCid === 'string' && bodyCid.trim() ? bodyCid.trim() : crypto.randomUUID();
     const uidForLtm = normalizeUserId(userId) || 'anon';
+
+    if (stream === true) {
+      if (!DEEPSEEK_API_KEY) {
+        res.status(500).json({ error: serverMessage('ai.deepseek_key_missing', locale) });
+        return;
+      }
+      await handleStreamChat({ req, res, locale, message, systemPrompt, conversationId, uidForLtm });
+      return;
+    }
 
     const payload = await runWithLongTermLock(uidForLtm, conversationId, async () => {
       const client = await getMcpClient();
@@ -351,7 +535,8 @@ app.post('/api/ai/chat', async (req, res) => {
           messages,
           model: process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-pro',
           temperature: 0.7,
-          max_tokens: Number.isFinite(CHAT_MAX_TOKENS) && CHAT_MAX_TOKENS > 0 ? CHAT_MAX_TOKENS : 700,
+          max_tokens: Number.isFinite(CHAT_MAX_TOKENS) && CHAT_MAX_TOKENS > 0 ? CHAT_MAX_TOKENS : 2048,
+          ...(CHAT_THINKING_ON ? {} : { thinking: { type: 'disabled' } }),
         },
       });
 
